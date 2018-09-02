@@ -20,8 +20,6 @@ class ContainerAwareTraitTest extends TestCase
     /**
      * Setup the tests.
      *
-     *
-     * @since   1.2
      */
     protected function setUp()
     {
