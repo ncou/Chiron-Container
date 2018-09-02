@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/ncou/Chiron-Container.svg?branch=master)](https://travis-ci.org/ncou/Chiron-Container)
-[![Coverage Status](https://coveralls.io/repos/github/ncou/Chiron-Container/badge.svg?branch=master)](https://coveralls.io/github/ncou-Container/Chiron?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/ncou/Chiron-Container/badge.svg?branch=master)](https://coveralls.io/github/ncou/Chiron-Container?branch=master)
 [![CodeCov](https://codecov.io/gh/ncou/Chiron-Container/branch/master/graph/badge.svg)](https://codecov.io/gh/ncou/Chiron-Container)
 
 [![Latest Stable Version](https://poser.pugx.org/chiron/container/v/stable.png)](https://packagist.org/packages/chiron/container)

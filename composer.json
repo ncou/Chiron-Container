@@ -18,7 +18,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Chiron\\": "src/"
+            "Chiron\\Container\\": "src/"
         }
     },
     "autoload-dev" : {
