@@ -22,7 +22,7 @@
         }
     },
     "autoload-dev" : {
-        "psr-4": { "Chiron\\Tests\\" : "tests/" }
+        "psr-4": { "Chiron\\Tests\\Container\\" : "tests/" }
     },
     "scripts": {
         "test": [

@@ -13,11 +13,11 @@ use Psr\Container\ContainerInterface;
 interface ContainerAwareInterface
 {
     /**
-     * Set the DI container.
+     * Sets a DI container instance on the object.
      *
      * @param Container $container The DI container.
      *
-     * @return mixed
+     * @return void
      */
     public function setContainer(ContainerInterface $container);
 }

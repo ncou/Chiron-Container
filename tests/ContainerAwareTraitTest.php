@@ -35,46 +35,6 @@ class ContainerAwareTraitTest extends TestCase
     }
 
     /**
-     * Tests calling getContainer() without a Container object set.
-     *
-     *
-     * @coversDefaultClass  getContainer
-     * @expectedException   \UnexpectedValueException
-     */
-    public function testGetContainerException()
-    {
-        //$this->object->getContainer();
-
-        // retrieve protected method "getContainer" and execute it.
-        $getContainerReflection = new \ReflectionMethod(get_class($this->object), 'getContainer');
-        $getContainerReflection->setAccessible(true);
-        $getContainerReflection->invoke($this->object, []);
-    }
-
-    /**
-     * Tests calling getContainer() with a Container object set.
-     *
-     *
-     * @coversDefaultClass  getContainer
-     */
-    public function testGetContainer()
-    {
-        $reflection = new \ReflectionClass($this->object);
-        $refProp = $reflection->getProperty('container');
-        $refProp->setAccessible(true);
-        $refProp->setValue($this->object, new Container());
-        // retrieve protected method "getContainer" and execute it.
-        $getContainerReflection = new \ReflectionMethod(get_class($this->object), 'getContainer');
-        $getContainerReflection->setAccessible(true);
-        $result = $getContainerReflection->invoke($this->object, []);
-        $this->assertInstanceOf(
-            ContainerInterface::class,
-            $result,
-            'Validates the Container object was set.'
-        );
-    }
-
-    /**
      * Tests setting a Container object.
      *
      *

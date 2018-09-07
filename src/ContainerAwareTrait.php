@@ -12,24 +12,23 @@ use Psr\Container\ContainerInterface;
 trait ContainerAwareTrait
 {
     /**
-     * DI Container.
+     * The DI Container instance.
      *
      * @var Container
      */
-    private $container;
+    protected $container;
 
     /**
      * Set the DI container.
      *
      * @param Container $container The DI container.
      *
-     * @return mixed Returns itself to support chaining.
      */
     public function setContainer(ContainerInterface $container)
     {
         $this->container = $container;
 
-        return $this;
+        //return $this;
     }
 
     /**
@@ -39,6 +38,7 @@ trait ContainerAwareTrait
      *
      * @return Container
      */
+    /*
     protected function getContainer(): ContainerInterface
     {
         if ($this->container) {
@@ -46,5 +46,5 @@ trait ContainerAwareTrait
         }
 
         throw new \UnexpectedValueException('Container not set in ' . __CLASS__);
-    }
+    }*/
 }
