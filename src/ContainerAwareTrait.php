@@ -24,11 +24,11 @@ trait ContainerAwareTrait
      * @param Container $container The DI container.
      *
      */
-    public function setContainer(ContainerInterface $container)
+    public function setContainer(ContainerInterface $container): ContainerAwareInterface
     {
         $this->container = $container;
 
-        //return $this;
+        return $this;
     }
 
     /**

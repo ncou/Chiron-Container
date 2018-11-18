@@ -17,7 +17,7 @@ interface ContainerAwareInterface
      *
      * @param Container $container The DI container.
      *
-     * @return void
+     * @return static
      */
-    public function setContainer(ContainerInterface $container);
+    public function setContainer(ContainerInterface $container): ContainerAwareInterface;
 }
