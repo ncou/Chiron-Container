@@ -27,7 +27,6 @@
     "scripts": {
         "test": [
             "@phpunit",
-            "@phpcs",
             "@phpstan"
         ],
         "phpunit": "phpunit --colors=always",
