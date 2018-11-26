@@ -42,6 +42,13 @@ use SplObjectStorage;
 class Container implements ArrayAccess, ContainerInterface
 {
     /**
+     * The current globally available container (if any).
+     *
+     * @var static
+     */
+    protected static $instance;
+
+    /**
      * Contains all entries.
      *
      * @var array
@@ -181,6 +188,30 @@ class Container implements ArrayAccess, ContainerInterface
         return $this;
     }
     */
+
+    /**
+     * Set the globally available instance of the container.
+     *
+     * @return static
+     */
+    public static function getInstance() : ContainerInterface
+    {
+        if (is_null(static::$instance)) {
+            static::$instance = new static;
+        }
+        return static::$instance;
+    }
+
+    /**
+     * Set the shared instance of the container.
+     *
+     * @param  \Chiron\Container\Container|null  $container
+     * @return \Chiron\Container\Container|static
+     */
+    public static function setInstance(ContainerInterface $container = null)
+    {
+        return static::$instance = $container;
+    }
 
     /**
      * Gets a parameter or an object.
