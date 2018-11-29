@@ -11,7 +11,7 @@
          bootstrap="vendor/autoload.php"
          >
     <testsuites>
-        <testsuite name="Chiron Conposer Tests">
+        <testsuite name="Chiron Container Tests">
             <directory>tests/</directory>
         </testsuite>
     </testsuites>
