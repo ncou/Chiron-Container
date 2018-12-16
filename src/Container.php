@@ -237,22 +237,25 @@ class Container implements ArrayAccess, ContainerInterface
     }
 
     /**
-     * Returns a reference to various property arrays.
+     * Dynamically access container services.
      *
-     * @param string $name The property name to return.
-     *
-     * @throws EntryNotFoundException
-     *
-     * @return array
+     * @param  string  $key
+     * @return mixed
      */
-    public function __get($name)
+    public function __get($key)
     {
-        return $this->get($name);
+        return $this[$key];
     }
-
-    public function __set($name, $service)
+    /**
+     * Dynamically set container services.
+     *
+     * @param  string  $key
+     * @param  mixed   $value
+     * @return void
+     */
+    public function __set($key, $value)
     {
-        $this->set($name, $service);
+        $this[$key] = $value;
     }
 
     // TODO ; ajouter les méthodes isset et unset :
