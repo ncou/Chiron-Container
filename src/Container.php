@@ -5,6 +5,12 @@ declare(strict_types=1);
 namespace Chiron\Container;
 
 // TODO : regarder ici pour récupérer la fonction alias / make / register : https://github.com/joomla-framework/di/blob/master/src/Container.php
+// TODO : gestion du "call()" ou "make()" qui retrouve automatiquement les paramétres de la fonction par rapport à ce qu'il y a dans le container :
+//https://github.com/Wandu/Framework/blob/master/src/Wandu/DI/Container.php#L279
+//https://github.com/illuminate/container/blob/master/Container.php#L569    +   https://github.com/laravel/framework/blob/e0dbd6ab143286d81bedf2b34f8820f3d49ea15f/src/Illuminate/Foundation/Application.php#L795
+//https://github.com/illuminate/container/blob/master/BoundMethod.php
+
+
 // TODO : regarder ici pour la méthode delegate et defaultToShared => https://github.com/thephpleague/container/blob/master/src/Container.php#L104
 
 //https://github.com/inxilpro/Zit/blob/master/lib/Zit/Container.php
