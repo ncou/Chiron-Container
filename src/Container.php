@@ -12,7 +12,6 @@ namespace Chiron\Container;
 //https://github.com/illuminate/container/blob/master/Container.php#L569    +   https://github.com/laravel/framework/blob/e0dbd6ab143286d81bedf2b34f8820f3d49ea15f/src/Illuminate/Foundation/Application.php#L795
 //https://github.com/illuminate/container/blob/master/BoundMethod.php
 
-
 // TODO : regarder ici pour la méthode delegate et defaultToShared => https://github.com/thephpleague/container/blob/master/src/Container.php#L104
 
 //https://github.com/inxilpro/Zit/blob/master/lib/Zit/Container.php
@@ -45,9 +44,9 @@ namespace Chiron\Container;
 use ArrayAccess;
 use Chiron\Container\Exception\EntryNotFoundException;
 use Closure;
+use LogicException;
 use Psr\Container\ContainerInterface;
 use SplObjectStorage;
-use LogicException;
 
 class Container implements ContainerInterface, ArrayAccess
 {
@@ -89,7 +88,7 @@ class Container implements ContainerInterface, ArrayAccess
      * Sets a new service.
      *
      * @param string $name
-     * @param mixed $entry
+     * @param mixed  $entry
      */
     // TODO : on devrait pas faire une vérification si le service existe déjà (cad que le nom est déjà utilisé) on léve une exception pour éviter d'acraser le service ???? ou alors il faudrait un paramétre pour forcer l'overwrite du service si il existe dejà
     // TODO : renommer la méthode en bind() ????
@@ -173,7 +172,8 @@ class Container implements ContainerInterface, ArrayAccess
     /**
      * Determine if a given string is an alias.
      *
-     * @param  string  $name
+     * @param string $name
+     *
      * @return bool
      */
     public function isAlias(string $name): bool
@@ -184,9 +184,8 @@ class Container implements ContainerInterface, ArrayAccess
     /**
      * Alias a type to a different name.
      *
-     * @param  string  $alias
-     * @param  string  $target
-     * @return void
+     * @param string $alias
+     * @param string $target
      */
     public function alias(string $alias, string $target): void
     {
@@ -196,10 +195,11 @@ class Container implements ContainerInterface, ArrayAccess
     /**
      * Get the alias for an abstract if available.
      *
-     * @param  string  $abstract
-     * @return string
+     * @param string $abstract
      *
      * @throws \LogicException
+     *
+     * @return string
      */
     public function getAlias(string $abstract): string
     {
@@ -209,10 +209,9 @@ class Container implements ContainerInterface, ArrayAccess
         if ($this->aliases[$abstract] === $abstract) {
             throw new LogicException("[{$abstract}] is aliased to itself.");
         }
+
         return $this->getAlias($this->aliases[$abstract]);
     }
-
-
 
     // TODO : méthode à tester, et vérifier son utilité !!!!
 
@@ -228,8 +227,6 @@ class Container implements ContainerInterface, ArrayAccess
 
     /**
      * Flush the container of all services and aliases.
-     *
-     * @return void
      */
     public function flush()
     {
@@ -281,7 +278,7 @@ class Container implements ContainerInterface, ArrayAccess
      * as function names (strings) are callable (creating a function with
      * the same name as an existing parameter would break your container).
      *
-     * @param string $name    The unique identifier for the parameter or object
+     * @param string $name  The unique identifier for the parameter or object
      * @param mixed  $entry The value of the parameter or a closure to define an object
      */
     public function offsetSet($name, $entry)
@@ -314,7 +311,8 @@ class Container implements ContainerInterface, ArrayAccess
     /**
      * Dynamically access container services.
      *
-     * @param  string  $name
+     * @param string $name
+     *
      * @return mixed
      */
     // TODO : réfléchir si on doit pas virer cette méthode.
@@ -322,12 +320,12 @@ class Container implements ContainerInterface, ArrayAccess
     {
         return $this[$name];
     }
+
     /**
      * Dynamically set container services.
      *
-     * @param  string  $name
-     * @param  mixed   $value
-     * @return void
+     * @param string $name
+     * @param mixed  $value
      */
     // TODO : réfléchir si on doit pas virer cette méthode.
     public function __set($name, $entry)
@@ -336,22 +334,17 @@ class Container implements ContainerInterface, ArrayAccess
     }
 
     // TODO ; ajouter les méthodes isset et unset :
-/*
-    public function __isset($key) {
-        return $this->has($key);
-    }
+    /*
+        public function __isset($key) {
+            return $this->has($key);
+        }
+    
+        public function __unset($key) {
+            return $this->remove($key);
+        }
+    */
 
-    public function __unset($key) {
-        return $this->remove($key);
-    }
-*/
-
-
-
-
-
-
-//https://github.com/Wandu/Framework/blob/master/src/Wandu/DI/Container.php#L279
+    //https://github.com/Wandu/Framework/blob/master/src/Wandu/DI/Container.php#L279
     /**
      * {@inheritdoc}
      */
@@ -378,14 +371,15 @@ class Container implements ContainerInterface, ArrayAccess
 
     /**
      * @param \ReflectionFunctionAbstract $reflectionFunction
-     * @param array $arguments
+     * @param array                       $arguments
+     *
      * @return array
      */
     protected function getParameters(\ReflectionFunctionAbstract $reflectionFunction, array $arguments = []): array
     {
         $parametersToReturn = static::getSeqArray($arguments);
         $reflectionParameters = array_slice($reflectionFunction->getParameters(), count($parametersToReturn));
-        if (!count($reflectionParameters)) {
+        if (! count($reflectionParameters)) {
             return $parametersToReturn;
         }
         /* @var \ReflectionParameter $param */
@@ -399,9 +393,11 @@ class Container implements ContainerInterface, ArrayAccess
              * #4. exception
              */
             $paramName = $param->getName();
+
             try {
                 if (array_key_exists($paramName, $arguments)) { // #1.
                     $parametersToReturn[] = $arguments[$paramName];
+
                     continue;
                 }
                 $paramClass = $param->getClass();
@@ -409,27 +405,35 @@ class Container implements ContainerInterface, ArrayAccess
                     $paramClassName = $paramClass->getName();
                     if (array_key_exists($paramClassName, $arguments)) {
                         $parametersToReturn[] = $arguments[$paramClassName];
+
                         continue;
                     } else { // #2.1.
                         try {
                             $parametersToReturn[] = $this->get($paramClassName);
+
                             continue;
-                        } catch (\Psr\Container\NotFoundExceptionInterface $e) {}
+                        } catch (\Psr\Container\NotFoundExceptionInterface $e) {
+                        }
                     }
                 }
                 if ($param->isDefaultValueAvailable()) { // #3.
                     $parametersToReturn[] = $param->getDefaultValue();
+
                     continue;
                 }
+
                 throw new \RuntimeException("cannot find parameter \"{$paramName}\"."); // #4.
             } catch (\ReflectionException $e) {
                 throw new \RuntimeException("cannot find parameter \"{$paramName}\".");
             }
         }
+
         return $parametersToReturn;
     }
+
     /**
      * @param array $array
+     *
      * @return array
      */
     protected static function getSeqArray(array $array): array
@@ -440,8 +444,7 @@ class Container implements ContainerInterface, ArrayAccess
                 $arrayToReturn[] = $item;
             }
         }
+
         return $arrayToReturn;
     }
-
-
 }
