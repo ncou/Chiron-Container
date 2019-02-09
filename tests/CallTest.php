@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Chiron\Tests\Container;
 
 use Chiron\Container\Container;
-use PHPUnit\Framework\TestCase;
 use Closure;
-use RuntimeException;
-use Chiron\Container\ReflectionCallable;
+use PHPUnit\Framework\TestCase;
 use stdClass;
 
 class CallTest extends TestCase
@@ -23,6 +21,7 @@ class CallTest extends TestCase
 
         $container->call(__NAMESPACE__ . '\\callTestHasTypedParam');
     }
+
     public function testCallAutoResolveSuccess()
     {
         $container = new Container();
@@ -89,7 +88,7 @@ class CallTest extends TestCase
         // only sequential
         $result = $container->call(__NAMESPACE__ . '\\callTestHasComplexParam', [
             $param1 = new CallTestDependency(),
-            $param2 = new stdClass,
+            $param2 = new stdClass(),
         ]);
         static::assertSame($param1, $result[0]);
         static::assertSame($param2, $result[1]);
@@ -97,8 +96,8 @@ class CallTest extends TestCase
         static::assertSame('param4', $result[3]);
         // only assoc
         $result = $container->call(__NAMESPACE__ . '\\callTestHasComplexParam', [
-            'param2' => $param2 = new stdClass,
-            'param4' => $param4 = new stdClass,
+            'param2' => $param2 = new stdClass(),
+            'param4' => $param4 = new stdClass(),
         ]);
         static::assertInstanceOf(CallTestDependencyInterface::class, $result[0]);
         static::assertSame($param2, $result[1]);
@@ -107,9 +106,9 @@ class CallTest extends TestCase
         // complex
         $result = $container->call(__NAMESPACE__ . '\\callTestHasComplexParam', [
             $param1 = new CallTestDependency(),
-            $param2 = new stdClass,
-            'param4' => $param4 = new stdClass,
-            'param3' => $param3 = new stdClass,
+            $param2 = new stdClass(),
+            'param4' => $param4 = new stdClass(),
+            'param3' => $param3 = new stdClass(),
         ]);
         static::assertSame($param1, $result[0]);
         static::assertSame($param2, $result[1]);
@@ -136,7 +135,7 @@ class CallTest extends TestCase
         $result = $container->call([CallTestInvokers::class, 'staticMethod'], ['param4', 'param5']);
         static::assertEquals(['staticMethod', ['param4', 'param5']], $result);
         // array of method
-        $result = $container->call([new CallTestInvokers, 'instanceMethod'], ['param5', 'param6']);
+        $result = $container->call([new CallTestInvokers(), 'instanceMethod'], ['param5', 'param6']);
         static::assertEquals(['instanceMethod', ['param5', 'param6']], $result);
         // invoker
         $result = $container->call(new CallTestInvokers(), ['param6', 'param7']);
@@ -187,14 +186,29 @@ class CallTest extends TestCase
         static::assertSame($expected, $actual);
     }
 }
-interface CallTestDependencyInterface {}
-class CallTestDependency implements CallTestDependencyInterface {}
-interface CallTestCallWithOnlyAliasInterface {}
-class CallTestCallWithOnlyAlias implements CallTestCallWithOnlyAliasInterface {
-    public function __construct($param) {}
+interface CallTestDependencyInterface
+{
 }
-function callTestHasTypedParam(CallTestDependencyInterface $param) { return $param; }
-function callTestHasUntypedParam($param) { return $param; }
+class CallTestDependency implements CallTestDependencyInterface
+{
+}
+interface CallTestCallWithOnlyAliasInterface
+{
+}
+class CallTestCallWithOnlyAlias implements CallTestCallWithOnlyAliasInterface
+{
+    public function __construct($param)
+    {
+    }
+}
+function callTestHasTypedParam(CallTestDependencyInterface $param)
+{
+    return $param;
+}
+function callTestHasUntypedParam($param)
+{
+    return $param;
+}
 function callTestHasComplexParam(CallTestDependencyInterface $param1, $param2, $param3 = 'param3', $param4 = 'param4')
 {
     return [$param1, $param2, $param3, $param4];
@@ -212,6 +226,7 @@ class CallTestInvokers
     {
         return ['staticMethod', func_get_args()];
     }
+
     /**
      * @return string
      */
@@ -219,6 +234,7 @@ class CallTestInvokers
     {
         return ['instanceMethod', func_get_args()];
     }
+
     /**
      * @return string
      */
@@ -226,18 +242,22 @@ class CallTestInvokers
     {
         return ['__invoke', func_get_args()];
     }
+
     /**
      * @param $name
      * @param $arguments
+     *
      * @return array
      */
     public function __call($name, $arguments)
     {
         return ['__call', $name, $arguments];
     }
+
     /**
      * @param $name
      * @param $arguments
+     *
      * @return array
      */
     public static function __callStatic($name, $arguments)
