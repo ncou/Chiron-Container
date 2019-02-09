@@ -6,6 +6,7 @@ namespace Chiron\Tests\Container;
 
 use Chiron\Container\Container;
 use PHPUnit\Framework\TestCase;
+use LogicException;
 
 class ContainerTest extends TestCase
 {
@@ -455,4 +456,47 @@ class ContainerTest extends TestCase
         $container->set('param', 'value');
         $this->assertEquals('value', $container['param']);
     }
+
+    // TETS NCOU :
+
+
+    public function testAliases()
+    {
+        $container = new Container;
+        $container['foo'] = 'bar';
+        $container->alias('baz', 'foo');
+        $container->alias('bat', 'baz');
+        $this->assertEquals('bar', $container->get('foo'));
+        $this->assertEquals('bar', $container->get('baz'));
+        $this->assertEquals('bar', $container->get('bat'));
+    }
+
+    public function testAliasCheckViaArrayAccess()
+    {
+        $container = new Container;
+        $container['object'] = 'foobar';
+
+        $container->alias('alias', 'object');
+
+        $this->assertTrue(isset($container['alias']));
+        $this->assertEquals('foobar', $container['alias']);
+    }
+
+    public function testGetAlias()
+    {
+        $container = new Container;
+        $container->alias('foo', 'ConcreteStub');
+        $this->assertEquals($container->getAlias('foo'), 'ConcreteStub');
+    }
+    public function testItThrowsExceptionWhenAbstractIsSameAsAlias()
+    {
+        $container = new Container;
+        $container->alias('name', 'name');
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('[name] is aliased to itself.');
+        $container->getAlias('name');
+    }
+
+
+
 }
