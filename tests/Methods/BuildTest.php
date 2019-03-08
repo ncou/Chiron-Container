@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Chiron\Tests\Container\Methods;
 
+use Chiron\Container\Container;
 use PHPUnit\Framework\TestCase;
 use stdClass;
-use Chiron\Container\Container;
-use ReflectionClass;
-use Chiron\Container\Exception\CannotResolveException;
 
 class BuildTest extends TestCase
 {
@@ -64,14 +62,14 @@ class BuildTest extends TestCase
 
         // by assoc classname
         $object = $container->build(BuildTestHasTypedParam::class, [
-            BuildTestDependencyInterface::class => $dep = new BuildTestDependency,
+            BuildTestDependencyInterface::class => $dep = new BuildTestDependency(),
         ]);
         static::assertSame($dep, $object->typedParam);
 
         // by sequential
         $object = $container->build(BuildTestHasComplexParam::class, [
             $param1 = new BuildTestDependency(),
-            $param2 = new stdClass,
+            $param2 = new stdClass(),
         ]);
         static::assertSame($param1, $object->param1);
         static::assertSame($param2, $object->param2);
@@ -81,8 +79,8 @@ class BuildTest extends TestCase
         // by assoc paramname
         $object = $container->build(BuildTestHasComplexParam::class, [
             'param1' => $param1 = new BuildTestDependency(),
-            'param2' => $param2 = new stdClass,
-            'param4' => $param4 = new stdClass,
+            'param2' => $param2 = new stdClass(),
+            'param4' => $param4 = new stdClass(),
         ]);
         static::assertSame($param1, $object->param1);
         static::assertSame($param2, $object->param2);
@@ -92,8 +90,8 @@ class BuildTest extends TestCase
         // assoc with class name
         $object = $container->build(BuildTestHasComplexParam::class, [
             BuildTestDependencyInterface::class => $param1 = new BuildTestDependency(),
-            'param2' => $param2 = new stdClass,
-            'param4' => $param4 = new stdClass,
+            'param2'                            => $param2 = new stdClass(),
+            'param4'                            => $param4 = new stdClass(),
         ]);
         static::assertInstanceOf(BuildTestDependencyInterface::class, $object->param1);
         static::assertSame($param1, $object->param1);
@@ -104,9 +102,9 @@ class BuildTest extends TestCase
         // complex
         $object = $container->build(BuildTestHasComplexParam::class, [
             $param1 = new BuildTestDependency(),
-            $param2 = new stdClass,
-            'param4' => $param4 = new stdClass,
-            'param3' => $param3 = new stdClass,
+            $param2 = new stdClass(),
+            'param4' => $param4 = new stdClass(),
+            'param3' => $param3 = new stdClass(),
         ]);
         static::assertSame($param1, $object->param1);
         static::assertSame($param2, $object->param2);
@@ -157,11 +155,14 @@ class BuildTest extends TestCase
 
         static::assertSame('bar', $object->class->name);
     }
-
 }
 
-interface BuildTestDependencyInterface {}
-class BuildTestDependency implements BuildTestDependencyInterface {}
+interface BuildTestDependencyInterface
+{
+}
+class BuildTestDependency implements BuildTestDependencyInterface
+{
+}
 
 class BuildTestHasTypedParam
 {
@@ -205,5 +206,3 @@ class BuildTestClassInstance
         $this->class = $class;
     }
 }
-
-

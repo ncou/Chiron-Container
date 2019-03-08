@@ -1,13 +1,13 @@
 <?php
+
 namespace Wandu\DI\Descriptor;
 
+use Chiron\Container\Container;
 use PHPUnit\Framework\TestCase;
 use stdClass;
-use Chiron\Container\Container;
 
 class FactoryTest extends TestCase
 {
-
     public function testBindClosureFactory()
     {
         $container = new Container();
@@ -21,7 +21,6 @@ class FactoryTest extends TestCase
         static::assertSame($object1, $container['obj1']);
         static::assertSame($object1, $container['obj1']);
         static::assertSame($object1, $container['obj1']);
-
 
         $container->bind('obj2', function () {
             return new stdClass();
@@ -77,5 +76,9 @@ class FactoryTest extends TestCase
     }
 }
 
-interface FactoryTestIF {}
-class FactoryTestClass implements FactoryTestIF {}
+interface FactoryTestIF
+{
+}
+class FactoryTestClass implements FactoryTestIF
+{
+}

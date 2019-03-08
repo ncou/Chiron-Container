@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Chiron\Container;
 
-use Chiron\Container\DescriptorInterface;
-
 class Descriptor implements DescriptorInterface
 {
     /** @var array */
@@ -29,6 +27,7 @@ class Descriptor implements DescriptorInterface
     public function assign(string $paramName, $target): DescriptorInterface
     {
         $this->assigns[$paramName] = $target;
+
         return $this;
     }
 
@@ -38,6 +37,7 @@ class Descriptor implements DescriptorInterface
     public function assignMany(array $params = []): DescriptorInterface
     {
         $this->assigns = $params + $this->assigns;
+
         return $this;
     }
 
@@ -47,6 +47,7 @@ class Descriptor implements DescriptorInterface
     public function wire(string $propertyName, $target): DescriptorInterface
     {
         $this->wires[$propertyName] = $target;
+
         return $this;
     }
 
@@ -56,6 +57,7 @@ class Descriptor implements DescriptorInterface
     public function wireMany(array $properties): DescriptorInterface
     {
         $this->wires = $properties + $this->wires;
+
         return $this;
     }
 
@@ -65,6 +67,7 @@ class Descriptor implements DescriptorInterface
     public function after(callable $handler): DescriptorInterface
     {
         $this->afterHandlers[] = $handler;
+
         return $this;
     }
 
@@ -74,6 +77,7 @@ class Descriptor implements DescriptorInterface
     public function factory(): DescriptorInterface
     {
         $this->factory = true;
+
         return $this;
     }
 
@@ -83,6 +87,7 @@ class Descriptor implements DescriptorInterface
     public function freeze(): DescriptorInterface
     {
         $this->frozen = true;
+
         return $this;
     }
 }

@@ -4,16 +4,12 @@ declare(strict_types=1);
 
 namespace Chiron\Tests\Container\Methods;
 
-use PHPUnit\Framework\TestCase;
-use ReflectionClass;
-use stdClass;
 use Chiron\Container\Container;
-use Chiron\Container\Exception\CannotResolveException;
-use Chiron\Container\Reflection\ReflectionCallable;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class CallTest extends TestCase
 {
-
     /**
      * @expectedException Chiron\Container\Exception\CannotResolveException
      * @expectedExceptionMessage cannot resolve the "param" parameter
@@ -35,7 +31,6 @@ class CallTest extends TestCase
         static::assertInstanceOf(CallTestDependencyInterface::class, $result);
         static::assertInstanceOf(CallTestDependency::class, $result);
     }
-
 
     /**
      * @expectedException Chiron\Container\Exception\CannotResolveException
@@ -93,7 +88,7 @@ class CallTest extends TestCase
         // only sequential
         $result = $container->call(__NAMESPACE__ . '\\callTestHasComplexParam', [
             $param1 = new CallTestDependency(),
-            $param2 = new stdClass,
+            $param2 = new stdClass(),
         ]);
         static::assertSame($param1, $result[0]);
         static::assertSame($param2, $result[1]);
@@ -102,8 +97,8 @@ class CallTest extends TestCase
 
         // only assoc
         $result = $container->call(__NAMESPACE__ . '\\callTestHasComplexParam', [
-            'param2' => $param2 = new stdClass,
-            'param4' => $param4 = new stdClass,
+            'param2' => $param2 = new stdClass(),
+            'param4' => $param4 = new stdClass(),
         ]);
         static::assertInstanceOf(CallTestDependencyInterface::class, $result[0]);
         static::assertSame($param2, $result[1]);
@@ -113,9 +108,9 @@ class CallTest extends TestCase
         // complex
         $result = $container->call(__NAMESPACE__ . '\\callTestHasComplexParam', [
             $param1 = new CallTestDependency(),
-            $param2 = new stdClass,
-            'param4' => $param4 = new stdClass,
-            'param3' => $param3 = new stdClass,
+            $param2 = new stdClass(),
+            'param4' => $param4 = new stdClass(),
+            'param3' => $param3 = new stdClass(),
         ]);
         static::assertSame($param1, $result[0]);
         static::assertSame($param2, $result[1]);
@@ -148,7 +143,7 @@ class CallTest extends TestCase
         static::assertEquals(['staticMethod', ['param4', 'param5']], $result);
 
         // array of method
-        $result = $container->call([new CallTestInvokers, 'instanceMethod'], ['param5', 'param6']);
+        $result = $container->call([new CallTestInvokers(), 'instanceMethod'], ['param5', 'param6']);
         static::assertEquals(['instanceMethod', ['param5', 'param6']], $result);
 
         // invoker
@@ -186,7 +181,7 @@ class CallTest extends TestCase
         $expected = new CallTestCallWithOnlyAlias(1111);
 
         $actual = $container->with([
-            CallTestCallWithOnlyAlias::class => $expected
+            CallTestCallWithOnlyAlias::class => $expected,
         ])->call(function (CallTestCallWithOnlyAliasInterface $depend) {
             return $depend;
         });
@@ -194,16 +189,31 @@ class CallTest extends TestCase
     }
 }
 
-interface CallTestDependencyInterface {}
-class CallTestDependency implements CallTestDependencyInterface {}
-
-interface CallTestCallWithOnlyAliasInterface {}
-class CallTestCallWithOnlyAlias implements CallTestCallWithOnlyAliasInterface {
-    public function __construct($param) {}
+interface CallTestDependencyInterface
+{
+}
+class CallTestDependency implements CallTestDependencyInterface
+{
 }
 
-function callTestHasTypedParam(CallTestDependencyInterface $param) { return $param; }
-function callTestHasUntypedParam($param) { return $param; }
+interface CallTestCallWithOnlyAliasInterface
+{
+}
+class CallTestCallWithOnlyAlias implements CallTestCallWithOnlyAliasInterface
+{
+    public function __construct($param)
+    {
+    }
+}
+
+function callTestHasTypedParam(CallTestDependencyInterface $param)
+{
+    return $param;
+}
+function callTestHasUntypedParam($param)
+{
+    return $param;
+}
 function callTestHasComplexParam(CallTestDependencyInterface $param1, $param2, $param3 = 'param3', $param4 = 'param4')
 {
     return [$param1, $param2, $param3, $param4];
@@ -241,6 +251,7 @@ class CallTestInvokers
     /**
      * @param $name
      * @param $arguments
+     *
      * @return array
      */
     public function __call($name, $arguments)
@@ -251,6 +262,7 @@ class CallTestInvokers
     /**
      * @param $name
      * @param $arguments
+     *
      * @return array
      */
     public static function __callStatic($name, $arguments)

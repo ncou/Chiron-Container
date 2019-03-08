@@ -4,17 +4,13 @@ declare(strict_types=1);
 
 namespace Chiron\Tests\Container\Methods;
 
-use PHPUnit\Framework\TestCase;
-use ReflectionClass;
-use stdClass;
-use Closure;
 use Chiron\Container\Container;
-use Chiron\Container\Exception\CannotResolveException;
-use Chiron\Container\Reflection\ReflectionCallable;
+use Closure;
+use PHPUnit\Framework\TestCase;
+use stdClass;
 
 class WrapTest extends TestCase
 {
-
     public function testWrapFunction()
     {
         $container = new Container();
@@ -32,6 +28,5 @@ class WrapTest extends TestCase
 
         $this->assertInstanceOf(stdClass::class, $result[0]);
         $this->assertEquals('taylor', $result[1]);
-
     }
 }

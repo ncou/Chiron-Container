@@ -4,13 +4,8 @@ declare(strict_types=1);
 
 namespace Chiron\Tests\Container;
 
-use ArrayObject;
-use PHPUnit\Framework\TestCase;
-use Chiron\Container\Exception\CannotChangeException;
-use Chiron\Container\Exception\NullReferenceException;
-use Chiron\Container\Exception\DependencyException;
 use Chiron\Container\Container;
-use Chiron\Container\ContainerInterface;
+use PHPUnit\Framework\TestCase;
 
 class NotInstantiableTest extends TestCase
 {
@@ -69,12 +64,21 @@ class NotInstantiableTest extends TestCase
     }
 }
 
-interface ContainerTestInterface {}
+interface ContainerTestInterface
+{
+}
 
-abstract class ContainerTestAbstract {}
+abstract class ContainerTestAbstract
+{
+}
 
-trait ContainerTestTrait {}
+trait ContainerTestTrait
+{
+}
 
-class ContainerTestPrivateConstructor {
-    private function __construct() { }
+class ContainerTestPrivateConstructor
+{
+    private function __construct()
+    {
+    }
 }

@@ -1,33 +1,33 @@
 <?php
+
 namespace Wandu\DI\Descriptor;
 
-use PHPUnit\Framework\TestCase;
 use Chiron\Container\Container;
+use PHPUnit\Framework\TestCase;
 
 class AssignValueTest extends TestCase
 {
-
     public function testAssignValueByBind()
     {
         // bind interface
         $container = new Container();
-        $container->bind(AssignValueTestClassIF::class, AssignValueTestClass::class)->assign('dep', ['value' => "hello dependency!"]);
+        $container->bind(AssignValueTestClassIF::class, AssignValueTestClass::class)->assign('dep', ['value' => 'hello dependency!']);
 
         $object = $container->get(AssignValueTestClass::class);
         static::assertInstanceOf(AssignValueTestClass::class, $object);
-        static::assertSame("hello dependency!", $object->getDep());
+        static::assertSame('hello dependency!', $object->getDep());
 
         $object = $container->get(AssignValueTestClassIF::class);
         static::assertInstanceOf(AssignValueTestClass::class, $object);
-        static::assertSame("hello dependency!", $object->getDep());
+        static::assertSame('hello dependency!', $object->getDep());
 
         // bind class directly
         $container = new Container();
-        $container->bind(AssignValueTestClass::class)->assign('dep', ['value' => "hello dependency!"]);
+        $container->bind(AssignValueTestClass::class)->assign('dep', ['value' => 'hello dependency!']);
 
         $object = $container->get(AssignValueTestClass::class);
         static::assertInstanceOf(AssignValueTestClass::class, $object);
-        static::assertSame("hello dependency!", $object->getDep());
+        static::assertSame('hello dependency!', $object->getDep());
     }
 
     public function testAssignValueByClosure()
@@ -35,18 +35,21 @@ class AssignValueTest extends TestCase
         $container = new Container();
         $container->bind(AssignValueTestClassIF::class, function ($dep) {
             return new AssignValueTestClass($dep . ' from closure');
-        })->assign('dep', ['value' => "hello dependency!"]);
+        })->assign('dep', ['value' => 'hello dependency!']);
 
         $object = $container->get(AssignValueTestClassIF::class);
         static::assertInstanceOf(AssignValueTestClass::class, $object);
-        static::assertSame("hello dependency! from closure", $object->getDep());
+        static::assertSame('hello dependency! from closure', $object->getDep());
     }
 }
 
-interface AssignValueTestClassIF {}
+interface AssignValueTestClassIF
+{
+}
 class AssignValueTestClass implements AssignValueTestClassIF
 {
     protected $dep;
+
     public function __construct($dep)
     {
         $this->dep = $dep;
