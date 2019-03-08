@@ -2,7 +2,7 @@
     "name": "chiron/container",
     "type": "library",
     "description": "PSR-11 Container component",
-    "keywords": ["psr11","psr-11","container","di","Dependency","Injection"],
+    "keywords": ["psr11","psr-11","container","di","Dependency","Injection", "dependency injection", "ioc", "auto resolve"],
     "homepage": "https://github.com/ncou/Chiron-Container",
     "license": "MIT",
     "require": {

@@ -4,131 +4,136 @@ declare(strict_types=1);
 
 namespace Chiron\Container;
 
-//https://github.com/illuminate/container/blob/master/Container.php#L569
-
-// TODO : regarder ici pour récupérer la fonction alias / make / register : https://github.com/joomla-framework/di/blob/master/src/Container.php
-// TODO : gestion du "call()" ou "make()" qui retrouve automatiquement les paramétres de la fonction par rapport à ce qu'il y a dans le container :
-//https://github.com/Wandu/Framework/blob/master/src/Wandu/DI/Container.php#L279
-//https://github.com/illuminate/container/blob/master/Container.php#L569    +   https://github.com/laravel/framework/blob/e0dbd6ab143286d81bedf2b34f8820f3d49ea15f/src/Illuminate/Foundation/Application.php#L795
-//https://github.com/illuminate/container/blob/master/BoundMethod.php
-
-// TODO : regarder ici pour la méthode delegate et defaultToShared => https://github.com/thephpleague/container/blob/master/src/Container.php#L104
-
-//https://github.com/inxilpro/Zit/blob/master/lib/Zit/Container.php
-
-// ALIAS :
-//https://github.com/njasm/container
-
-// PROTECT CLOSURE :
-//https://github.com/frostealth/php-container/blob/master/src/container/Container.php#L105
-
-// TODO : mettre en cache le container avec un serialize/unserialize : https://github.com/radarphp/Radar.Adr/blob/1.x/src/Boot.php#L79
-
-// Delegate container :
-// https://github.com/thecodingmachine/picotainer/blob/1.1/src/Picotainer.php
-
-//*************
-// TODO : ajouter la gestion des ServicesProviders => https://github.com/mnapoli/simplex/blob/master/src/Simplex/Container.php#L332
-// Regarder aussi ici => https://github.com/thecodingmachine/slim-universal-module
-// et ici pour les specs => https://github.com/container-interop/service-provider
-//*************
-
-// TODO : Exemple : moon-php/container  ou alors simplex
-
-// TODO : gestion des exceptions : https://github.com/thephpleague/container/tree/master/src/Exception
-// TODO : ou ici : https://github.com/ultra-lite/container/blob/master/src/UltraLite/Container/Exception/DiServiceNotFound.php
-// TODO : https://github.com/slimphp/Slim/blob/477b00d96b9ace3c607ecd42a34750e280ab520c/Slim/Exception/ContainerException.php
-
-// TODO : regarder comment engistrer des services comme dans simplex (methode extend et register) : https://github.com/mnapoli/simplex
-
-use ArrayAccess;
-use Chiron\Container\Exception\EntryNotFoundException;
-use Closure;
+use Doctrine\Common\Annotations\Reader;
 use LogicException;
-use Psr\Container\ContainerInterface;
-use SplObjectStorage;
+use InvalidArgumentException;
+use Psr\Container\ContainerExceptionInterface;
+use Psr\Container\ContainerInterface as PsrContainerInterface;
+use ReflectionClass;
+use ReflectionException;
+use ReflectionFunctionAbstract;
+use Closure;
+use Chiron\Container\Annotations\Alias;
+use Chiron\Container\Annotations\Assign;
+use Chiron\Container\Annotations\AssignValue;
+use Chiron\Container\Annotations\Factory;
+use Chiron\Container\Annotations\Wire;
+use Chiron\Container\Annotations\WireValue;
+use Chiron\Container\Exception\CannotChangeException;
+use Chiron\Container\Exception\CannotFindParameterException;
+use Chiron\Container\Exception\DependencyException;
+use Chiron\Container\Exception\CannotResolveException;
+use Chiron\Container\Exception\NullReferenceException;
+use Chiron\Container\Reflection\ReflectionCallable;
 
-class Container implements ContainerInterface, ArrayAccess
+// TODO : créer une méthode singleton() ou share() => https://github.com/illuminate/container/blob/master/Container.php#L354
+// https://github.com/thephpleague/container/blob/master/src/Container.php#L92
+//https://github.com/mrferos/di/blob/master/src/Container.php#L99
+
+// TODO : améliorer le Circular exception avec le code : https://github.com/symfony/dependency-injection/blob/master/Container.php#L236
+
+class Container implements ContainerInterface
 {
-    /**
-     * Contains all entries.
-     *
-     * @var array
-     */
-    protected $services = [];
+    /** @var \Wandu\DI\ContainerInterface */
+    //public static $instance;
 
-    /**
-     * The registered type aliases.
-     *
-     * @var array
-     */
+    /** @var \Wandu\DI\Descriptor[] */
+    protected $descriptors = [];
+
+    /** @var array */
+    // TODO : renommer ce tableau en "services[]" ????
+    protected $instances = [];
+
+    /** @var array */
+    protected $classes = [];
+
+    /** @var array */
+    protected $closures = [];
+
+    /** @var array */
     protected $aliases = [];
 
-    protected $factories;
-
     /**
-     * Container constructor accept an array.
-     * It must be an associative array with a 'name' key and a 'entry' value.
-     * The value can be anything: an integer, a string, a closure or an instance.
-     *
-     * @param array $entries
+     * Array of entries being resolved. Used to avoid circular dependencies and infinite loops.
+     * @var array
      */
-    // TODO : il faudrait surement faire une méthode __clone() qui dupliquera l'objet factories !!!!! non ?????
-    public function __construct(array $entries = [])
-    {
-        $this->factories = new SplObjectStorage();
+    protected $entriesBeingResolved = [];
 
-        //$this->services = $entries;
-        foreach ($entries as $name => $entry) {
-            $this->set($name, $entry);
-        }
+    public function __construct(array $options = [])
+    {
+        // TODO : à virer
+        $this->instances = [
+            Container::class => $this,
+            ContainerInterface::class => $this,
+            PsrContainerInterface::class => $this,
+            'container' => $this,
+        ];
+        $this->descriptors[Container::class]
+            = $this->descriptors[ContainerInterface::class]
+            = $this->descriptors[PsrContainerInterface::class]
+            = $this->descriptors['container']
+            = (new Descriptor())->freeze();
+    }
+
+    // TODO : à virer
+    public function __clone()
+    {
+        $this->instances[Container::class] = $this;
+        $this->instances[ContainerInterface::class] = $this;
+        $this->instances[PsrContainerInterface::class] = $this;
+        $this->instances['container'] = $this;
     }
 
     /**
-     * Sets a new service.
-     *
-     * @param string $name
-     * @param mixed  $entry
+     * @return \Wandu\DI\ContainerInterface
      */
-    // TODO : on devrait pas faire une vérification si le service existe déjà (cad que le nom est déjà utilisé) on léve une exception pour éviter d'acraser le service ???? ou alors il faudrait un paramétre pour forcer l'overwrite du service si il existe dejà
-    // TODO : renommer la méthode en bind() ????
-    public function set(string $name, $entry)
+    /*
+    public function setAsGlobal()
     {
-        // bind the "container" to the var "$this" inside the Closure function
-        if ($entry instanceof Closure) {
-            $entry = $entry->bindTo($this);
-        }
-        $this->services[$name] = $entry;
+        $instance = static::$instance;
+        static::$instance = $this;
+        return $instance;
+    }*/
+
+    /**
+     * {@inheritdoc}
+     */
+    /*
+    public function __call($name, array $arguments)
+    {
+        return $this->call($this->get($name), $arguments);
+    }*/
+
+    /**
+     * {@inheritdoc}
+     */
+    public function offsetExists($name)
+    {
+        return $this->has($name) && $this->get($name) !== null;
     }
 
     /**
-     * Unsets a service.
-     *
-     * @param string $name
+     * {@inheritdoc}
      */
-    public function remove(string $name)
+    public function offsetGet($name)
     {
-        // TODO : tester si cela est utile (surement si on stocke un string au lieu d'un callable à voir)
-        //if (is_object($this->services[$name])) {
-        unset($this->factories[$this->services[$name]]);
-        //}
-        unset($this->services[$name]);
+        return $this->get($name);
     }
 
     /**
-     * Marks a callable as being a factory service.
-     *
-     * @param callable $callable A service definition to be used as a factory
-     *
-     * @throws ExpectedInvokableException Service definition has to be a closure or an invokable object
-     *
-     * @return callable The passed callable
+     * {@inheritdoc}
      */
-    public function factory(callable $callable)
+    public function offsetSet($name, $value)
     {
-        $this->factories->attach($callable);
+        $this->instance($name, $value);
+    }
 
-        return $callable;
+    /**
+     * {@inheritdoc}
+     */
+    public function offsetUnset($name)
+    {
+        $this->destroy($name);
     }
 
     /**
@@ -136,44 +141,171 @@ class Container implements ContainerInterface, ArrayAccess
      */
     public function get($name)
     {
-        $name = $this->getAlias($name);
-
-        //TODO : on devrait faire une vérif si le paramétre $name est bien une string sinon on léve une exception !!!!!
-        if (! $this->has($name)) {
-            throw new EntryNotFoundException($name);
-            //throw new \InvalidArgumentException("'$name' doesn't exists in the Container component");
+        if (isset($this->descriptors[$name])) {
+            $this->descriptors[$name]->freeze();
         }
+        return $this->resolve($name);
+    }
 
-        if (! is_callable($this->services[$name])) {
-            return $this->services[$name];
-        }
+    /**
+     * Wrap the given closure such that its dependencies will be injected when executed.
+     *
+     * @param  \Closure  $callback
+     * @param  array  $parameters
+     * @return \Closure
+     */
+    // https://github.com/illuminate/container/blob/master/Container.php#L556
+    // TODO : le paramétre $callback ne devrait pas plutot être du type callable au lieu de Closure ?????
+    public function wrap(Closure $callback, array $parameters = []): Closure
+    {
+        return function () use ($callback, $parameters) {
+            return $this->call($callback, $parameters);
+        };
+    }
 
-        $container = $this;
-
-        if (isset($this->factories[$this->services[$name]])) {
-            return $this->services[$name]($container);
-        }
-
-        $this->services[$name] = $this->services[$name]($container);
-
-        return $this->services[$name];
+    /**
+     * Get a closure to resolve the given type from the container.
+     *
+     * @param  string  $abstract
+     * @return \Closure
+     */
+    //https://github.com/illuminate/container/blob/master/Container.php#L582
+    public function factory(string $abstract): Closure
+    {
+        return function () use ($abstract) {
+            // this will resolve the item (so instanciate class or execute closure)
+            return $this->get($abstract);
+        };
     }
 
     /**
      * {@inheritdoc}
      */
+    // TODO : mettre en place un systéme de cache dans le cas ou on fait un has() ca va instancier la classe il faudrait la mettre en cache pour éviter de devoir refaire la même chose si on doit faire un get() dans la foulée !!!
+    public function has($name)
+    {
+        try {
+            $this->resolve($name);
+            return true;
+            // TODO : améliorer le catch et lui attraper toute les exception de type PSR/Container/ContainerException
+        } catch (NullReferenceException $e) {
+        } catch (CannotResolveException $e) {
+        } catch (DependencyException $e) {
+        }
+        return false;
+    }
+
+/*
+// TODO : regarder si on peut utiliser cette méthode pour tester le has() !!!!
     public function has($name): bool
     {
         //TODO : on devrait faire une vérif si le paramétre $alias est bien une string sinon on léve une exception !!!!!
-        //return isset($this->services[$alias]);
         return array_key_exists($name, $this->services) || $this->isAlias($name);
+    }
+*/
+
+    /**
+     * Determine if the given abstract type has been bound.
+     *
+     * @param  string  $abstract
+     * @return bool
+     */
+    /*
+    //https://github.com/illuminate/container/blob/master/Container.php#L158
+    public function bound($abstract)
+    {
+        return isset($this->bindings[$abstract]) ||
+               isset($this->instances[$abstract]) ||
+               $this->isAlias($abstract);
+    }*/
+    /**
+     *  {@inheritdoc}
+     */
+    /*
+    public function has($id)
+    {
+        return $this->bound($id);
+    }*/
+
+
+
+    /**
+     * {@inheritdoc}
+     */
+    public function destroy(...$names)
+    {
+        foreach ($names as $name) {
+            if (array_key_exists($name, $this->descriptors)) {
+                if ($this->descriptors[$name]->frozen) {
+                    throw new CannotChangeException($name);
+                }
+            }
+            unset(
+                $this->descriptors[$name],
+                $this->instances[$name],
+                $this->classes[$name],
+                $this->closures[$name]
+                // TODO : il faudrait aussi supprimer l'alias !!!!!
+            );
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function instance(string $name, $value): DescriptorInterface
+    {
+        $this->destroy($name);
+        $this->instances[$name] = $value;
+        return $this->descriptors[$name] = new Descriptor();
+    }
+
+    /**
+     * @deprecated
+     */
+    public function closure(string $name, callable $handler): DescriptorInterface
+    {
+        return $this->bind($name, $handler);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    // TODO : lui passer un 3 eme paramétre pour savoir si c'est du shared ou non + créer une méthode share() => https://github.com/thephpleague/container/blob/master/src/Container.php#L92
+    public function bind(string $name, $className = null): DescriptorInterface
+    {
+        if (!isset($className)) {
+            $this->destroy($name);
+            $this->classes[$name] = $name;
+            return $this->descriptors[$name] = new Descriptor();
+        }
+        if (is_string($className) && class_exists($className)) {
+            $this->destroy($name, $className);
+            $this->classes[$className] = $className;
+            $this->alias($name, $className);
+            return $this->descriptors[$className] = new Descriptor();
+        } elseif (is_callable($className)) {
+            $this->destroy($name);
+            $this->closures[$name] = $className;
+            return $this->descriptors[$name] = new Descriptor();
+        }
+        throw new InvalidArgumentException(
+            sprintf('Argument 2 must be class name or Closure, "%s" given', is_object($className) ? get_class($className) : gettype($className))
+        );
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function alias(string $alias, string $target): void
+    {
+        $this->aliases[$alias] = $target;
     }
 
     /**
      * Determine if a given string is an alias.
      *
-     * @param string $name
-     *
+     * @param  string  $name
      * @return bool
      */
     public function isAlias(string $name): bool
@@ -182,24 +314,12 @@ class Container implements ContainerInterface, ArrayAccess
     }
 
     /**
-     * Alias a type to a different name.
-     *
-     * @param string $alias
-     * @param string $target
-     */
-    public function alias(string $alias, string $target): void
-    {
-        $this->aliases[$alias] = $target;
-    }
-
-    /**
      * Get the alias for an abstract if available.
      *
-     * @param string $abstract
+     * @param  string  $abstract
+     * @return string
      *
      * @throws \LogicException
-     *
-     * @return string
      */
     public function getAlias(string $abstract): string
     {
@@ -209,147 +329,96 @@ class Container implements ContainerInterface, ArrayAccess
         if ($this->aliases[$abstract] === $abstract) {
             throw new LogicException("[{$abstract}] is aliased to itself.");
         }
-
         return $this->getAlias($this->aliases[$abstract]);
     }
 
-    // TODO : méthode à tester, et vérifier son utilité !!!!
-
-    /**
-     * Get container keys.
-     *
-     * @return array The container data keys
-     */
-    public function keys()
-    {
-        return array_keys($this->services);
-    }
-
-    /**
-     * Flush the container of all services and aliases.
-     */
-    public function flush()
-    {
-        $this->services = [];
-        $this->aliases = [];
-        $this->factories = new SplObjectStorage();
-    }
-
-    /**
-     * Registers a service provider.
-     *
-     * @param ServiceProviderInterface $provider A ServiceProviderInterface instance
-     * @param array                    $values   An array of values that customizes the provider
-     *
-     * @return static
-     */
-    /*
-    //https://github.com/silexphp/Pimple/blob/master/src/Pimple/Container.php#L288
-    public function register(ServiceProviderInterface $provider, array $values = array())
-    {
-        $provider->register($this);
-        foreach ($values as $key => $value) {
-            $this[$key] = $value;
-        }
-        return $this;
-    }
-    */
-
-    /**
-     * Gets a parameter or an object.
-     *
-     * @param string $name The unique identifier for the parameter or object
-     *
-     * @throws EntryNotFoundException If the identifier is not defined
-     *
-     * @return mixed The value of the parameter or an object
-     */
-    public function offsetGet($name)
-    {
-        return $this->get($name);
-    }
-
-    /**
-     * Sets a parameter or an object.
-     *
-     * Objects must be defined as Closures.
-     *
-     * Allowing any PHP callable leads to difficult to debug problems
-     * as function names (strings) are callable (creating a function with
-     * the same name as an existing parameter would break your container).
-     *
-     * @param string $name  The unique identifier for the parameter or object
-     * @param mixed  $entry The value of the parameter or a closure to define an object
-     */
-    public function offsetSet($name, $entry)
-    {
-        $this->set($name, $entry);
-    }
-
-    /**
-     * Unsets a parameter or an object.
-     *
-     * @param string $name The unique identifier for the parameter or object
-     */
-    public function offsetUnset($name)
-    {
-        $this->remove($name);
-    }
-
-    /**
-     * Checks if a parameter or an object is set.
-     *
-     * @param string $name The unique identifier for the parameter or object
-     *
-     * @return bool
-     */
-    public function offsetExists($name)
-    {
-        return $this->has($name);
-    }
-
-    /**
-     * Dynamically access container services.
-     *
-     * @param string $name
-     *
-     * @return mixed
-     */
-    // TODO : réfléchir si on doit pas virer cette méthode.
-    public function __get($name)
-    {
-        return $this[$name];
-    }
-
-    /**
-     * Dynamically set container services.
-     *
-     * @param string $name
-     * @param mixed  $value
-     */
-    // TODO : réfléchir si on doit pas virer cette méthode.
-    public function __set($name, $entry)
-    {
-        $this[$name] = $entry;
-    }
-
-    // TODO ; ajouter les méthodes isset et unset :
-    /*
-        public function __isset($key) {
-            return $this->has($key);
-        }
-    
-        public function __unset($key) {
-            return $this->remove($key);
-        }
-    */
-
-    //https://github.com/Wandu/Framework/blob/master/src/Wandu/DI/Container.php#L279
     /**
      * {@inheritdoc}
      */
-    /*
-    public function call(callable $callee, array $arguments = [])
+    public function descriptor(string $name): DescriptorInterface
+    {
+        $name = $this->getAlias($name);
+
+        if (!array_key_exists($name, $this->descriptors)) {
+            throw new NullReferenceException($name);
+        }
+        return $this->descriptors[$name];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    // TODO : éviter de faire un clone et renvoyer $this
+    public function with(array $arguments = []): ContainerInterface
+    {
+        $new = clone $this;
+        foreach ($arguments as $name => $argument) {
+            $new->instance($name, $argument);
+        }
+        return $new;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    // TODO : améliorer le code regarder ici   =>   https://github.com/illuminate/container/blob/master/Container.php#L778
+    // TODO : améliorer le code et regarder ici => https://github.com/thephpleague/container/blob/68c148e932ef9959af371590940b4217549b5b65/src/Definition/Definition.php#L225
+    // TODO : attention on ne gére pas les alias, alors que cela pourrait servir si on veut builder une classe en utilisant l'alias qui est présent dans le container. Réfléchir si ce cas peut arriver.
+    // TODO : renommer en buildClass() ????
+    // TODO : améliorer le Circular exception avec le code : https://github.com/symfony/dependency-injection/blob/master/Container.php#L236
+    public function build(string $className, array $arguments = [])
+    {
+        if (! class_exists($className)) {
+            throw new NullReferenceException($className);
+        }
+
+        try {
+            // TODO : vérifier que le constructeur est public !!!! => https://github.com/PHP-DI/PHP-DI/blob/cdcf21d2a8a60605e81ec269342d48b544d0dfc7/src/Definition/Source/ReflectionBasedAutowiring.php#L31
+            // Constructor
+            $class = new ReflectionClass($className);
+
+            // Prevent error if you try to instanciate an abstract class or a class with a private constructor.
+            if (! $class->isInstantiable()) {
+                throw new DependencyException(sprintf(
+                    'Entry "%s" cannot be resolved: the class is not instantiable',
+                    $className
+                ));
+            }
+
+            // Check if we are already getting this entry -> circular dependency
+            if (isset($this->entriesBeingResolved[$className])) {
+                throw new DependencyException(sprintf(
+                    'Circular dependency detected while trying to resolve entry "%s"',
+                    $className
+                ));
+            }
+            $this->entriesBeingResolved[$className] = true;
+
+            // TODO : améliorer ce bout de code, on fait 2 fois un new class, alors qu'on pourrait en faire qu'un !!! https://github.com/illuminate/container/blob/master/Container.php#L815
+            if ($constructor = $class->getConstructor()) {
+                $arguments = $this->getParameters($constructor, $arguments);
+
+                unset($this->entriesBeingResolved[$className]);
+
+                return new $className(...$arguments);
+            }
+        } catch (CannotFindParameterException $e) {
+            throw new CannotResolveException($className, $e->getParameter());
+        }
+
+        unset($this->entriesBeingResolved[$className]);
+
+        //$reflection->newInstanceArgs($resolved);
+        return new $className;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    // TODO : regarder ici le code qui permet d'executer aussi les callables ajoutés dans le container   => https://github.com/mrferos/di/blob/master/src/Container.php#L173
+    // grosso modo le typehint de $callee peut être une string présente dans le tableau des closure =>  $this->closure[$calleeName]
+    // TODO : méthode à virer !!!!
+    public function call_old(callable $callee, array $arguments = [])
     {
         try {
             return call_user_func_array(
@@ -359,29 +428,188 @@ class Container implements ContainerInterface, ArrayAccess
         } catch (CannotFindParameterException $e) {
             throw new CannotResolveException($callee, $e->getParameter());
         }
-    }*/
+    }
 
-    public function call(callable $callee, array $arguments = [])
+
+
+
+    /**
+     * Call the given Closure / class@method and inject its dependencies.
+     *
+     * @param  callable|string  $callback
+     * @param  array  $parameters
+     * @param  string|null  $defaultMethod
+     * @return mixed
+     */
+    public function call($callback, array $parameters = [], ?string $defaultMethod = null)
     {
-        return call_user_func_array(
-            $callee,
-            $this->getParameters(new ReflectionCallable($callee), $arguments)
-        );
+        if ($this->isCallableWithAtSign($callback) || $defaultMethod) {
+            return $this->callClass($callback, $parameters, $defaultMethod);
+        }
+
+        /*
+        return $this->callBoundMethod($container, $callback, function () use ($container, $callback, $parameters) {
+            return call_user_func_array(
+                $callback, $this->getMethodDependencies($container, $callback, $parameters)
+            );
+        });*/
+
+        if (! is_callable($callback)) {
+            throw new InvalidArgumentException(sprintf(
+                '(%s) is not resolvable.',
+                is_array($callback) || is_object($callback) || is_null($callback) ? json_encode($callback) : $callback
+            ));
+        }
+
+
+        try {
+            return call_user_func_array(
+                $callback,
+                $this->getParameters(new ReflectionCallable($callback), $parameters)
+            );
+        } catch (CannotFindParameterException $e) {
+            throw new CannotResolveException($callback, $e->getParameter());
+        }
     }
 
     /**
-     * @param \ReflectionFunctionAbstract $reflectionFunction
-     * @param array                       $arguments
+     * Call a string reference to a class using Class@method syntax.
      *
+     * @param  string  $target
+     * @param  array  $parameters
+     * @param  string|null  $defaultMethod
+     * @return mixed
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function callClass(string $target, array $parameters = [], ?string $defaultMethod = null)
+    {
+        $segments = explode('@', $target);
+        // We will assume an @ sign is used to delimit the class name from the method
+        // name. We will split on this @ sign and then build a callable array that
+        // we can pass right back into the "call" method for dependency binding.
+        $method = count($segments) === 2 ? $segments[1] : $defaultMethod;
+
+        if (is_null($method)) {
+            throw new InvalidArgumentException('Method not provided.');
+        }
+
+        return $this->call([$this->get($segments[0]), $method], $parameters);
+    }
+
+
+    /**
+     * Determine if the given string is in Class@method syntax.
+     *
+     * @param  mixed  $callback
+     * @return bool
+     */
+    private function isCallableWithAtSign($callback): bool
+    {
+        return is_string($callback) && strpos($callback, '@') !== false;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    /**
+     * @param string $name
+     * @return mixed|object
+     */
+    protected function resolve($name)
+    {
+        // resolve alias
+        $name = $this->getAlias($name);
+
+        if (array_key_exists($name, $this->instances)) {
+            return $this->instances[$name];
+        }
+        if (!array_key_exists($name, $this->descriptors)) {
+            if (!class_exists($name)) {
+                throw new NullReferenceException($name);
+            }
+            $this->bind($name);
+        }
+        $descriptor = $this->descriptors[$name];
+        if (array_key_exists($name, $this->classes)) {
+            $instance = $this->build($this->classes[$name], $this->resolveArguments($descriptor->assigns));
+        } elseif (array_key_exists($name, $this->closures)) {
+            $instance = $this->call($this->closures[$name], $this->resolveArguments($descriptor->assigns));
+        }
+
+        // TODO : à virer dans la classe description et à virer d'ici.
+        foreach ($descriptor->afterHandlers as $handler) {
+            $this->call($handler, [$instance]);
+        }
+        foreach ($this->resolveArguments($descriptor->wires) as $propertyName => $value) {
+            $refl = (new \ReflectionObject($instance))->getProperty($propertyName);
+            $refl->setAccessible(true);
+            $refl->setValue($instance, $value);
+        }
+
+        if (!$descriptor->factory) {
+            $this->instances[$name] = $instance;
+        }
+
+        return $instance;
+    }
+
+    /**
+     * @param array $arguments
      * @return array
      */
-    protected function getParameters(\ReflectionFunctionAbstract $reflectionFunction, array $arguments = []): array
+    // TODO : méthode à déplacer dans la classe Descriptor.
+    protected function resolveArguments(array $arguments): array
     {
-        $parametersToReturn = static::getSeqArray($arguments);
-        $reflectionParameters = array_slice($reflectionFunction->getParameters(), count($parametersToReturn));
-        if (! count($reflectionParameters)) {
+        $argumentsToReturn = [];
+        foreach ($arguments as $key => $value) {
+            if (is_array($value)) {
+                if (array_key_exists('value', $value)) {
+                    $argumentsToReturn[$key] = $value['value'];
+                }
+            } else {
+                try {
+                    $argumentsToReturn[$key] = $this->get($value);
+                } catch (NullReferenceException $e) {}
+            }
+        }
+        return $argumentsToReturn;
+    }
+
+    /**
+     * @param \ReflectionFunctionAbstract $reflection
+     * @param array $arguments
+     * @return array
+     */
+    // TODO : renommer en getMethodDependencies()
+    protected function getParameters(ReflectionFunctionAbstract $reflection, array $arguments = []): array
+    {
+        // TODO : améliorer ce bout de code ******************
+        $parametersToReturn = static::getSeqArray($arguments); // utiliser plutot ce bout de code pour éviter d'initialiser un tableau lorsque les clés sont numeriques => https://github.com/illuminate/container/blob/master/BoundMethod.php#L119
+
+        $reflectionParameters = array_slice($reflection->getParameters(), count($parametersToReturn));
+
+        if (!count($reflectionParameters)) {
             return $parametersToReturn;
         }
+        // TODO END ******************************************
+
         /* @var \ReflectionParameter $param */
         foreach ($reflectionParameters as $param) {
             /*
@@ -393,47 +621,46 @@ class Container implements ContainerInterface, ArrayAccess
              * #4. exception
              */
             $paramName = $param->getName();
-
             try {
                 if (array_key_exists($paramName, $arguments)) { // #1.
                     $parametersToReturn[] = $arguments[$paramName];
-
                     continue;
                 }
+
                 $paramClass = $param->getClass();
+
                 if ($paramClass) { // #2.
                     $paramClassName = $paramClass->getName();
+
                     if (array_key_exists($paramClassName, $arguments)) {
                         $parametersToReturn[] = $arguments[$paramClassName];
-
                         continue;
                     } else { // #2.1.
                         try {
+                            // TODO : on devrait pas créer une méthode make() qui soit un alias de get ? => https://github.com/illuminate/container/blob/master/Container.php#L616
+                            // TODO : https://github.com/illuminate/container/blob/master/Container.php#L925
+                            // TODO : ajouter des tests dans le cas ou la classe passée en parameter est optionnelle (cad avec une valeur par défaut), il faudrait aussi faire un test avec "?ClassObject" voir si on passe null par défaut ou si on léve une exception car la classe n'existe pas !!!! => https://github.com/illuminate/container/blob/master/Container.php#L935
                             $parametersToReturn[] = $this->get($paramClassName);
-
                             continue;
-                        } catch (\Psr\Container\NotFoundExceptionInterface $e) {
-                        }
+                        } catch (NullReferenceException $e) {}
                     }
                 }
                 if ($param->isDefaultValueAvailable()) { // #3.
                     $parametersToReturn[] = $param->getDefaultValue();
-
                     continue;
                 }
 
-                throw new \RuntimeException("cannot find parameter \"{$paramName}\"."); // #4.
-            } catch (\ReflectionException $e) {
-                throw new \RuntimeException("cannot find parameter \"{$paramName}\".");
+                throw new CannotFindParameterException($paramName); // #4.
+            } catch (ReflectionException $e) {
+                // ReflectionException is thrown when the class doesn't exist.
+                throw new CannotFindParameterException($paramName);
             }
         }
-
         return $parametersToReturn;
     }
 
     /**
      * @param array $array
-     *
      * @return array
      */
     protected static function getSeqArray(array $array): array
@@ -444,7 +671,6 @@ class Container implements ContainerInterface, ArrayAccess
                 $arrayToReturn[] = $item;
             }
         }
-
         return $arrayToReturn;
     }
 }

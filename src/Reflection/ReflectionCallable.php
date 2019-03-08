@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Chiron\Container;
+namespace Chiron\Container\Reflection;
 
 use Closure;
 use ReflectionClass;
@@ -14,27 +14,26 @@ use RuntimeException;
 
 //https://github.com/fratily/reflection/blob/master/src/ReflectionCallable.php
 
+
 //https://github.com/n1215/cake-candle/blob/601bac468db7f6a794483c70193588eef87c542d/src/Reflection/ReflectionCallable.php
 //https://github.com/n1215/cake-candle/blob/601bac468db7f6a794483c70193588eef87c542d/src/Invoker/Invoker.php
 
 class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
 {
-    public const TYPE_FUNCTION = 1;
-    public const TYPE_STATIC_METHOD = 2;
-    public const TYPE_INSTANCE_METHOD = 3;
-    public const TYPE_INVOKER = 4;
-    public const TYPE_CLOSURE = 5;
+    const TYPE_FUNCTION = 1;
+    const TYPE_STATIC_METHOD = 2;
+    const TYPE_INSTANCE_METHOD = 3;
+    const TYPE_INVOKER = 4;
+    const TYPE_CLOSURE = 5;
 
     /** @var callable */
     private $callee;
-
     /** @var ReflectionFunctionAbstract */
     private $reflection;
-
     /** @var int */
     private $reflectionType;
 
-    /** @var bool */
+    /** @var boolean */
     private $magicMethod = false;
 
     /**
@@ -45,7 +44,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
         $this->callee = $callee;
         $this->reflection = $this->getFunctionAbstractReflection($callee);
     }
-
     /**
      * @return string
      */
@@ -67,9 +65,8 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
         // fallback..
         return $this->reflection->getShortName();
     }
-
     /**
-     * @return bool
+     * @return boolean
      */
     public function isMagicMethod()
     {
@@ -78,7 +75,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
 
     /**
      * @param callable $callee
-     *
      * @return ReflectionFunctionAbstract
      */
     protected function getFunctionAbstractReflection(callable $callee)
@@ -86,11 +82,9 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
         // closure, or function name,
         if ($callee instanceof Closure) {
             $this->reflectionType = static::TYPE_CLOSURE;
-
             return new ReflectionFunction($callee);
         } elseif (is_string($callee) && strpos($callee, '::') === false) {
             $this->reflectionType = static::TYPE_FUNCTION;
-
             return new ReflectionFunction($callee);
         }
         if (is_string($callee)) {
@@ -100,7 +94,7 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
             $callee = [$callee, '__invoke'];
         }
         if (is_object($callee[0])) {
-            if (! isset($this->reflectionType)) {
+            if (!isset($this->reflectionType)) {
                 $this->reflectionType = static::TYPE_INSTANCE_METHOD;
             }
             $reflection = new ReflectionObject($callee[0]);
@@ -108,7 +102,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
                 return $reflection->getMethod($callee[1]);
             }
             $this->magicMethod = true;
-
             return $reflection->getMethod('__call');
         }
         $this->reflectionType = static::TYPE_STATIC_METHOD;
@@ -117,10 +110,8 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
             return $reflection->getMethod($callee[1]);
         }
         $this->magicMethod = true;
-
         return $reflection->getMethod('__callStatic');
     }
-
     /**
      * @return int
      */
@@ -128,7 +119,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflectionType;
     }
-
     /**
      * @return \ReflectionFunctionAbstract
      */
@@ -136,17 +126,14 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection;
     }
-
     /**
      * @param ...mixed $params
-     *
      * @return mixed
      */
     public function __invoke()
     {
         return call_user_func_array($this->callee, func_get_args());
     }
-
     /**
      * {@inheritdoc}
      */
@@ -154,7 +141,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection->getReturnType();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -162,7 +148,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection->isGenerator();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -170,7 +155,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection->isVariadic();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -178,7 +162,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection->__toString();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -186,7 +169,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         throw new RuntimeException('not implemented method.');
     }
-
     /**
      * {@inheritdoc}
      */
@@ -194,7 +176,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection->inNamespace();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -202,7 +183,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection->isClosure();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -210,7 +190,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection->isDeprecated();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -218,7 +197,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection->isInternal();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -226,7 +204,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection->isUserDefined();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -234,7 +211,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection->getClosureThis();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -242,7 +218,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection->getClosureScopeClass();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -250,7 +225,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection->getDocComment();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -258,7 +232,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection->getEndLine();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -266,7 +239,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection->getExtension();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -274,7 +246,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection->getExtensionName();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -282,7 +253,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection->getFileName();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -291,10 +261,8 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
         if ($this->magicMethod) {
             return $this->callee[1];
         }
-
         return $this->reflection->getName();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -302,7 +270,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection->getNamespaceName();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -311,10 +278,8 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
         if ($this->magicMethod) {
             return 0;
         }
-
         return $this->reflection->getNumberOfParameters();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -323,10 +288,8 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
         if ($this->magicMethod) {
             return 0;
         }
-
         return $this->reflection->getNumberOfRequiredParameters();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -335,10 +298,8 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
         if ($this->magicMethod) {
             return [];
         }
-
         return $this->reflection->getParameters();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -347,10 +308,8 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
         if ($this->magicMethod) {
             return $this->callee[1];
         }
-
         return $this->reflection->getShortName();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -358,7 +317,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection->getStartLine();
     }
-
     /**
      * {@inheritdoc}
      */
@@ -366,7 +324,6 @@ class ReflectionCallable extends ReflectionFunctionAbstract implements Reflector
     {
         return $this->reflection->getStaticVariables();
     }
-
     /**
      * {@inheritdoc}
      */
