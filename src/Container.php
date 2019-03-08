@@ -147,6 +147,12 @@ class Container implements ContainerInterface
         return $this->resolve($name);
     }
 
+    // TODO : à virer c'est pour faire un raccourci vers la fonction ->instance()
+    public function set($name, $value)
+    {
+        $this->instance($name, $value);
+    }
+
     /**
      * Wrap the given closure such that its dependencies will be injected when executed.
      *
