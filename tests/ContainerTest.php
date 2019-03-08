@@ -5,15 +5,14 @@ declare(strict_types=1);
 namespace Chiron\Tests\Container;
 
 use ArrayObject;
-use PHPUnit\Framework\TestCase;
-use Chiron\Container\Exception\CannotChangeException;
-use Chiron\Container\Exception\NullReferenceException;
 use Chiron\Container\Container;
 use Chiron\Container\ContainerInterface;
+use Chiron\Container\Exception\CannotChangeException;
+use Chiron\Container\Exception\NullReferenceException;
+use PHPUnit\Framework\TestCase;
 
 class ContainerTest extends TestCase
 {
-
     public function testConstruct()
     {
         $container = new Container();
@@ -27,7 +26,7 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $container->instance(ContainerTestRenderable::class, new ContainerTestXmlRenderer);
+        $container->instance(ContainerTestRenderable::class, new ContainerTestXmlRenderer());
 
         static::assertTrue($container->has(ContainerTestRenderable::class)); // set by instance
         static::assertTrue($container->has(ContainerTestJsonRenderer::class)); // class true
@@ -118,7 +117,7 @@ class ContainerTest extends TestCase
     public function testAlias()
     {
         $container = new Container();
-        $renderer = new ContainerTestXmlRenderer;
+        $renderer = new ContainerTestXmlRenderer();
 
         $container->instance(ContainerTestRenderable::class, $renderer);
 
@@ -201,21 +200,21 @@ class ContainerTest extends TestCase
         $container->get('closure');
 
         // now cannot change
-        static::assertException(new CannotChangeException("instance"), function () use ($container) {
+        static::assertException(new CannotChangeException('instance'), function () use ($container) {
             $container->instance('instance', 'instance string changed 2');
         });
 
-        static::assertException(new CannotChangeException("closure"), function () use ($container) {
+        static::assertException(new CannotChangeException('closure'), function () use ($container) {
             $container->closure('closure', function () {
                 return 'closure string change 2';
             });
         });
 
         // also cannot remove
-        static::assertException(new CannotChangeException("instance"), function () use ($container) {
+        static::assertException(new CannotChangeException('instance'), function () use ($container) {
             $container->offsetUnset('instance');
         });
-        static::assertException(new CannotChangeException("closure"), function () use ($container) {
+        static::assertException(new CannotChangeException('closure'), function () use ($container) {
             $container->offsetUnset('closure');
         });
     }
@@ -275,7 +274,7 @@ class ContainerTest extends TestCase
 
     public function testGetAlias()
     {
-        $container = new Container;
+        $container = new Container();
         $container->alias('foo', 'ConcreteStub');
         $this->assertEquals($container->getAlias('foo'), 'ConcreteStub');
         $this->assertTrue($container->isAlias('foo'));
@@ -284,9 +283,10 @@ class ContainerTest extends TestCase
 
     /**
      * @deprecated use catchException
+     *
      * @param $expected
      * @param \Closure $closure
-     * @param string $message
+     * @param string   $message
      */
     // TODO : à améliorer !!!!
     private static function assertException($expected, \Closure $closure, $message = '')
@@ -295,17 +295,26 @@ class ContainerTest extends TestCase
             $closure();
         } catch (\Throwable $e) {
             static::assertEquals($expected, $e, $message);
+
             return;
         }
         static::fail($message);
     }
 }
 
-interface ContainerTestRenderable {}
-class ContainerTestJsonRenderer implements ContainerTestRenderable {}
-class ContainerTestXmlRenderer implements ContainerTestRenderable {}
+interface ContainerTestRenderable
+{
+}
+class ContainerTestJsonRenderer implements ContainerTestRenderable
+{
+}
+class ContainerTestXmlRenderer implements ContainerTestRenderable
+{
+}
 
-interface ContainerTestServerAccessible {}
+interface ContainerTestServerAccessible
+{
+}
 
 class ContainerTestHttpController
 {

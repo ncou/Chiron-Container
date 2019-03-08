@@ -4,17 +4,11 @@ declare(strict_types=1);
 
 namespace Chiron\Tests\Container;
 
-use ArrayObject;
-use PHPUnit\Framework\TestCase;
-use Chiron\Container\Exception\CannotChangeException;
-use Chiron\Container\Exception\NullReferenceException;
-use Chiron\Container\Exception\DependencyException;
 use Chiron\Container\Container;
-use Chiron\Container\ContainerInterface;
+use PHPUnit\Framework\TestCase;
 
 class CircularDependencyTest extends TestCase
 {
-
     /**
      * @expectedException Chiron\Container\Exception\DependencyException
      * @expectedExceptionMessage Circular dependency detected while trying to resolve entry
@@ -82,7 +76,7 @@ class CircularDependencyTest extends TestCase
         $container->bind(Class1CircularDependency::class);
         $container->bind(Class2CircularDependency::class);
 
-        $callable = function(Class1CircularDependency $class) {
+        $callable = function (Class1CircularDependency $class) {
             return $class;
         };
 
@@ -102,7 +96,7 @@ class CircularDependencyTest extends TestCase
         $container->bind(Class1CircularDependency::class);
         $container->bind(Class2CircularDependency::class);
 
-        $callable = function(Class1CircularDependency $class) {
+        $callable = function (Class1CircularDependency $class) {
             return $class;
         };
 

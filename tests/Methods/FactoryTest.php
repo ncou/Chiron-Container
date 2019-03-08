@@ -4,17 +4,11 @@ declare(strict_types=1);
 
 namespace Chiron\Tests\Container\Methods;
 
-use PHPUnit\Framework\TestCase;
-use ReflectionClass;
-use stdClass;
-use Closure;
 use Chiron\Container\Container;
-use Chiron\Container\Exception\CannotResolveException;
-use Chiron\Container\Reflection\ReflectionCallable;
+use PHPUnit\Framework\TestCase;
 
 class FactoryTest extends TestCase
 {
-
     public function testFactoryFunction()
     {
         $container = new Container();
@@ -26,6 +20,5 @@ class FactoryTest extends TestCase
         $factory = $container->factory('name');
 
         $this->assertEquals($container->get('name'), $factory());
-
     }
 }

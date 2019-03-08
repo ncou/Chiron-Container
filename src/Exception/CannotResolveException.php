@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Chiron\Container\Exception;
 
-use Psr\Container\NotFoundExceptionInterface;
-use RuntimeException;
-use ReflectionClass;
 use Chiron\Container\Reflection\ReflectionCallable;
+use Psr\Container\NotFoundExceptionInterface;
+use ReflectionClass;
+use RuntimeException;
 
 class CannotResolveException extends RuntimeException implements NotFoundExceptionInterface
 {

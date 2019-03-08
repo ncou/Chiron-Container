@@ -4,27 +4,21 @@ declare(strict_types=1);
 
 namespace Chiron\Container;
 
-use Doctrine\Common\Annotations\Reader;
-use LogicException;
+use Chiron\Container\Annotations\Alias;
+use Chiron\Container\Annotations\Factory;
+use Chiron\Container\Exception\CannotChangeException;
+use Chiron\Container\Exception\CannotFindParameterException;
+use Chiron\Container\Exception\CannotResolveException;
+use Chiron\Container\Exception\DependencyException;
+use Chiron\Container\Exception\NullReferenceException;
+use Chiron\Container\Reflection\ReflectionCallable;
+use Closure;
 use InvalidArgumentException;
-use Psr\Container\ContainerExceptionInterface;
+use LogicException;
 use Psr\Container\ContainerInterface as PsrContainerInterface;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionFunctionAbstract;
-use Closure;
-use Chiron\Container\Annotations\Alias;
-use Chiron\Container\Annotations\Assign;
-use Chiron\Container\Annotations\AssignValue;
-use Chiron\Container\Annotations\Factory;
-use Chiron\Container\Annotations\Wire;
-use Chiron\Container\Annotations\WireValue;
-use Chiron\Container\Exception\CannotChangeException;
-use Chiron\Container\Exception\CannotFindParameterException;
-use Chiron\Container\Exception\DependencyException;
-use Chiron\Container\Exception\CannotResolveException;
-use Chiron\Container\Exception\NullReferenceException;
-use Chiron\Container\Reflection\ReflectionCallable;
 
 // TODO : créer une méthode singleton() ou share() => https://github.com/illuminate/container/blob/master/Container.php#L354
 // https://github.com/thephpleague/container/blob/master/src/Container.php#L92
@@ -55,6 +49,7 @@ class Container implements ContainerInterface
 
     /**
      * Array of entries being resolved. Used to avoid circular dependencies and infinite loops.
+     *
      * @var array
      */
     protected $entriesBeingResolved = [];
@@ -63,10 +58,10 @@ class Container implements ContainerInterface
     {
         // TODO : à virer
         $this->instances = [
-            Container::class => $this,
-            ContainerInterface::class => $this,
+            Container::class             => $this,
+            ContainerInterface::class    => $this,
             PsrContainerInterface::class => $this,
-            'container' => $this,
+            'container'                  => $this,
         ];
         $this->descriptors[Container::class]
             = $this->descriptors[ContainerInterface::class]
@@ -144,6 +139,7 @@ class Container implements ContainerInterface
         if (isset($this->descriptors[$name])) {
             $this->descriptors[$name]->freeze();
         }
+
         return $this->resolve($name);
     }
 
@@ -156,8 +152,9 @@ class Container implements ContainerInterface
     /**
      * Wrap the given closure such that its dependencies will be injected when executed.
      *
-     * @param  \Closure  $callback
-     * @param  array  $parameters
+     * @param \Closure $callback
+     * @param array    $parameters
+     *
      * @return \Closure
      */
     // https://github.com/illuminate/container/blob/master/Container.php#L556
@@ -172,7 +169,8 @@ class Container implements ContainerInterface
     /**
      * Get a closure to resolve the given type from the container.
      *
-     * @param  string  $abstract
+     * @param string $abstract
+     *
      * @return \Closure
      */
     //https://github.com/illuminate/container/blob/master/Container.php#L582
@@ -192,28 +190,31 @@ class Container implements ContainerInterface
     {
         try {
             $this->resolve($name);
+
             return true;
             // TODO : améliorer le catch et lui attraper toute les exception de type PSR/Container/ContainerException
         } catch (NullReferenceException $e) {
         } catch (CannotResolveException $e) {
         } catch (DependencyException $e) {
         }
+
         return false;
     }
 
-/*
-// TODO : regarder si on peut utiliser cette méthode pour tester le has() !!!!
-    public function has($name): bool
-    {
-        //TODO : on devrait faire une vérif si le paramétre $alias est bien une string sinon on léve une exception !!!!!
-        return array_key_exists($name, $this->services) || $this->isAlias($name);
-    }
-*/
+    /*
+    // TODO : regarder si on peut utiliser cette méthode pour tester le has() !!!!
+        public function has($name): bool
+        {
+            //TODO : on devrait faire une vérif si le paramétre $alias est bien une string sinon on léve une exception !!!!!
+            return array_key_exists($name, $this->services) || $this->isAlias($name);
+        }
+    */
 
     /**
      * Determine if the given abstract type has been bound.
      *
-     * @param  string  $abstract
+     * @param string $abstract
+     *
      * @return bool
      */
     /*
@@ -232,8 +233,6 @@ class Container implements ContainerInterface
     {
         return $this->bound($id);
     }*/
-
-
 
     /**
      * {@inheritdoc}
@@ -263,6 +262,7 @@ class Container implements ContainerInterface
     {
         $this->destroy($name);
         $this->instances[$name] = $value;
+
         return $this->descriptors[$name] = new Descriptor();
     }
 
@@ -280,21 +280,25 @@ class Container implements ContainerInterface
     // TODO : lui passer un 3 eme paramétre pour savoir si c'est du shared ou non + créer une méthode share() => https://github.com/thephpleague/container/blob/master/src/Container.php#L92
     public function bind(string $name, $className = null): DescriptorInterface
     {
-        if (!isset($className)) {
+        if (! isset($className)) {
             $this->destroy($name);
             $this->classes[$name] = $name;
+
             return $this->descriptors[$name] = new Descriptor();
         }
         if (is_string($className) && class_exists($className)) {
             $this->destroy($name, $className);
             $this->classes[$className] = $className;
             $this->alias($name, $className);
+
             return $this->descriptors[$className] = new Descriptor();
         } elseif (is_callable($className)) {
             $this->destroy($name);
             $this->closures[$name] = $className;
+
             return $this->descriptors[$name] = new Descriptor();
         }
+
         throw new InvalidArgumentException(
             sprintf('Argument 2 must be class name or Closure, "%s" given', is_object($className) ? get_class($className) : gettype($className))
         );
@@ -311,7 +315,8 @@ class Container implements ContainerInterface
     /**
      * Determine if a given string is an alias.
      *
-     * @param  string  $name
+     * @param string $name
+     *
      * @return bool
      */
     public function isAlias(string $name): bool
@@ -322,10 +327,11 @@ class Container implements ContainerInterface
     /**
      * Get the alias for an abstract if available.
      *
-     * @param  string  $abstract
-     * @return string
+     * @param string $abstract
      *
      * @throws \LogicException
+     *
+     * @return string
      */
     public function getAlias(string $abstract): string
     {
@@ -335,6 +341,7 @@ class Container implements ContainerInterface
         if ($this->aliases[$abstract] === $abstract) {
             throw new LogicException("[{$abstract}] is aliased to itself.");
         }
+
         return $this->getAlias($this->aliases[$abstract]);
     }
 
@@ -345,9 +352,10 @@ class Container implements ContainerInterface
     {
         $name = $this->getAlias($name);
 
-        if (!array_key_exists($name, $this->descriptors)) {
+        if (! array_key_exists($name, $this->descriptors)) {
             throw new NullReferenceException($name);
         }
+
         return $this->descriptors[$name];
     }
 
@@ -361,6 +369,7 @@ class Container implements ContainerInterface
         foreach ($arguments as $name => $argument) {
             $new->instance($name, $argument);
         }
+
         return $new;
     }
 
@@ -415,7 +424,7 @@ class Container implements ContainerInterface
         unset($this->entriesBeingResolved[$className]);
 
         //$reflection->newInstanceArgs($resolved);
-        return new $className;
+        return new $className();
     }
 
     /**
@@ -436,15 +445,13 @@ class Container implements ContainerInterface
         }
     }
 
-
-
-
     /**
      * Call the given Closure / class@method and inject its dependencies.
      *
-     * @param  callable|string  $callback
-     * @param  array  $parameters
-     * @param  string|null  $defaultMethod
+     * @param callable|string $callback
+     * @param array           $parameters
+     * @param string|null     $defaultMethod
+     *
      * @return mixed
      */
     public function call($callback, array $parameters = [], ?string $defaultMethod = null)
@@ -467,7 +474,6 @@ class Container implements ContainerInterface
             ));
         }
 
-
         try {
             return call_user_func_array(
                 $callback,
@@ -481,12 +487,13 @@ class Container implements ContainerInterface
     /**
      * Call a string reference to a class using Class@method syntax.
      *
-     * @param  string  $target
-     * @param  array  $parameters
-     * @param  string|null  $defaultMethod
-     * @return mixed
+     * @param string      $target
+     * @param array       $parameters
+     * @param string|null $defaultMethod
      *
      * @throws \InvalidArgumentException
+     *
+     * @return mixed
      */
     private function callClass(string $target, array $parameters = [], ?string $defaultMethod = null)
     {
@@ -503,11 +510,11 @@ class Container implements ContainerInterface
         return $this->call([$this->get($segments[0]), $method], $parameters);
     }
 
-
     /**
      * Determine if the given string is in Class@method syntax.
      *
-     * @param  mixed  $callback
+     * @param mixed $callback
+     *
      * @return bool
      */
     private function isCallableWithAtSign($callback): bool
@@ -515,27 +522,9 @@ class Container implements ContainerInterface
         return is_string($callback) && strpos($callback, '@') !== false;
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
      * @param string $name
+     *
      * @return mixed|object
      */
     protected function resolve($name)
@@ -546,8 +535,8 @@ class Container implements ContainerInterface
         if (array_key_exists($name, $this->instances)) {
             return $this->instances[$name];
         }
-        if (!array_key_exists($name, $this->descriptors)) {
-            if (!class_exists($name)) {
+        if (! array_key_exists($name, $this->descriptors)) {
+            if (! class_exists($name)) {
                 throw new NullReferenceException($name);
             }
             $this->bind($name);
@@ -569,7 +558,7 @@ class Container implements ContainerInterface
             $refl->setValue($instance, $value);
         }
 
-        if (!$descriptor->factory) {
+        if (! $descriptor->factory) {
             $this->instances[$name] = $instance;
         }
 
@@ -578,6 +567,7 @@ class Container implements ContainerInterface
 
     /**
      * @param array $arguments
+     *
      * @return array
      */
     // TODO : méthode à déplacer dans la classe Descriptor.
@@ -592,15 +582,18 @@ class Container implements ContainerInterface
             } else {
                 try {
                     $argumentsToReturn[$key] = $this->get($value);
-                } catch (NullReferenceException $e) {}
+                } catch (NullReferenceException $e) {
+                }
             }
         }
+
         return $argumentsToReturn;
     }
 
     /**
      * @param \ReflectionFunctionAbstract $reflection
-     * @param array $arguments
+     * @param array                       $arguments
+     *
      * @return array
      */
     // TODO : renommer en getMethodDependencies()
@@ -611,7 +604,7 @@ class Container implements ContainerInterface
 
         $reflectionParameters = array_slice($reflection->getParameters(), count($parametersToReturn));
 
-        if (!count($reflectionParameters)) {
+        if (! count($reflectionParameters)) {
             return $parametersToReturn;
         }
         // TODO END ******************************************
@@ -627,9 +620,11 @@ class Container implements ContainerInterface
              * #4. exception
              */
             $paramName = $param->getName();
+
             try {
                 if (array_key_exists($paramName, $arguments)) { // #1.
                     $parametersToReturn[] = $arguments[$paramName];
+
                     continue;
                 }
 
@@ -640,6 +635,7 @@ class Container implements ContainerInterface
 
                     if (array_key_exists($paramClassName, $arguments)) {
                         $parametersToReturn[] = $arguments[$paramClassName];
+
                         continue;
                     } else { // #2.1.
                         try {
@@ -647,12 +643,15 @@ class Container implements ContainerInterface
                             // TODO : https://github.com/illuminate/container/blob/master/Container.php#L925
                             // TODO : ajouter des tests dans le cas ou la classe passée en parameter est optionnelle (cad avec une valeur par défaut), il faudrait aussi faire un test avec "?ClassObject" voir si on passe null par défaut ou si on léve une exception car la classe n'existe pas !!!! => https://github.com/illuminate/container/blob/master/Container.php#L935
                             $parametersToReturn[] = $this->get($paramClassName);
+
                             continue;
-                        } catch (NullReferenceException $e) {}
+                        } catch (NullReferenceException $e) {
+                        }
                     }
                 }
                 if ($param->isDefaultValueAvailable()) { // #3.
                     $parametersToReturn[] = $param->getDefaultValue();
+
                     continue;
                 }
 
@@ -662,11 +661,13 @@ class Container implements ContainerInterface
                 throw new CannotFindParameterException($paramName);
             }
         }
+
         return $parametersToReturn;
     }
 
     /**
      * @param array $array
+     *
      * @return array
      */
     protected static function getSeqArray(array $array): array
@@ -677,6 +678,7 @@ class Container implements ContainerInterface
                 $arrayToReturn[] = $item;
             }
         }
+
         return $arrayToReturn;
     }
 }

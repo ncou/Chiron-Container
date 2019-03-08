@@ -1,14 +1,12 @@
 <?php
+
 namespace Wandu\DI\Descriptor;
 
-use PHPUnit\Framework\TestCase;
 use Chiron\Container\Container;
-use Chiron\Container\Exception\CannotResolveException;
-use ReflectionClass;
+use PHPUnit\Framework\TestCase;
 
 class AssignTest extends TestCase
 {
-
     /**
      * @expectedException Chiron\Container\Exception\CannotResolveException
      * @expectedExceptionMessage cannot resolve the "dep" parameter
@@ -30,7 +28,7 @@ class AssignTest extends TestCase
 
         $object = $container->get(AssignTestClass::class);
         static::assertInstanceOf(AssignTestClass::class, $object);
-        static::assertSame("hello", $object->getDep());
+        static::assertSame('hello', $object->getDep());
     }
 
     public function testAssignByBind()
@@ -38,15 +36,15 @@ class AssignTest extends TestCase
         // bind interface
         $container = new Container();
         $container->instance('dep_dependency', 'hello dependency!');
-        $container->bind(AssignTestClassIF::class, AssignTestClass::class)->assign('dep', "dep_dependency");
+        $container->bind(AssignTestClassIF::class, AssignTestClass::class)->assign('dep', 'dep_dependency');
 
         $object = $container->get(AssignTestClass::class);
         static::assertInstanceOf(AssignTestClass::class, $object);
-        static::assertSame("hello dependency!", $object->getDep());
+        static::assertSame('hello dependency!', $object->getDep());
 
         $object = $container->get(AssignTestClassIF::class);
         static::assertInstanceOf(AssignTestClass::class, $object);
-        static::assertSame("hello dependency!", $object->getDep());
+        static::assertSame('hello dependency!', $object->getDep());
 
         // bind class directly
         $container = new Container();
@@ -55,7 +53,7 @@ class AssignTest extends TestCase
 
         $object = $container->get(AssignTestClass::class);
         static::assertInstanceOf(AssignTestClass::class, $object);
-        static::assertSame("hello dependency!", $object->getDep());
+        static::assertSame('hello dependency!', $object->getDep());
     }
 
     /**
@@ -78,18 +76,21 @@ class AssignTest extends TestCase
         $container->instance('dep_dependency', 'hello dependency!');
         $container->bind(AssignTestClassIF::class, function ($dep) {
             return new AssignTestClass($dep . ' from closure');
-        })->assign('dep', "dep_dependency");
+        })->assign('dep', 'dep_dependency');
 
         $object = $container->get(AssignTestClassIF::class);
         static::assertInstanceOf(AssignTestClass::class, $object);
-        static::assertSame("hello dependency! from closure", $object->getDep());
+        static::assertSame('hello dependency! from closure', $object->getDep());
     }
 }
 
-interface AssignTestClassIF {}
+interface AssignTestClassIF
+{
+}
 class AssignTestClass implements AssignTestClassIF
 {
     protected $dep;
+
     public function __construct($dep)
     {
         $this->dep = $dep;

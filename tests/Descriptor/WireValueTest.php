@@ -1,13 +1,12 @@
 <?php
+
 namespace Wandu\DI\Descriptor;
 
-use PHPUnit\Framework\TestCase;
-
 use Chiron\Container\Container;
+use PHPUnit\Framework\TestCase;
 
 class WireValueTest extends TestCase
 {
-
     public function testWireValueWithBind()
     {
         $container = new Container();
@@ -41,8 +40,10 @@ class WireValueTest extends TestCase
     }
 }
 
-class WireValueTestClass {
+class WireValueTestClass
+{
     private $property;
+
     public function getProperty()
     {
         return $this->property;

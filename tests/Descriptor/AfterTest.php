@@ -1,8 +1,9 @@
 <?php
+
 namespace Wandu\DI\Descriptor;
 
-use PHPUnit\Framework\TestCase;
 use Chiron\Container\Container;
+use PHPUnit\Framework\TestCase;
 
 class AfterTest extends TestCase
 {
@@ -64,6 +65,12 @@ class AfterTest extends TestCase
     }
 }
 
-interface AfterTestRenderable {}
-class AfterTestXmlRenderer implements AfterTestRenderable {}
-class AfterTestJsonRenderer implements AfterTestRenderable {}
+interface AfterTestRenderable
+{
+}
+class AfterTestXmlRenderer implements AfterTestRenderable
+{
+}
+class AfterTestJsonRenderer implements AfterTestRenderable
+{
+}

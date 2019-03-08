@@ -6,15 +6,9 @@ namespace Chiron\Tests\Container;
 
 use Chiron\Container\Container;
 use PHPUnit\Framework\TestCase;
-use Psr\Http\Message\ServerRequestInterface;
-use ReflectionClass;
-use Chiron\Container\Exception\CannotResolveException;
-use Wandu\Http\Parameters\ParsedBody;
-use Wandu\Http\Psr\ServerRequest;
 
 class AutoResolveTest extends TestCase
 {
-
     public function testBind()
     {
         $container = new Container();
@@ -60,12 +54,14 @@ class AutoResolveTest extends TestCase
 
         $container->get(AutoResolveTestClass::class);
     }
-
-
 }
 
-interface AutoResolveTestSimpleInterface {}
-class AutoResolveTestSimple implements AutoResolveTestSimpleInterface {}
+interface AutoResolveTestSimpleInterface
+{
+}
+class AutoResolveTestSimple implements AutoResolveTestSimpleInterface
+{
+}
 
 class AutoResolveTestDependency
 {
