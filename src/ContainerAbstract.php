@@ -98,9 +98,10 @@ class ContainerAbstract implements ContainerInterface
 
     public function has($id)
     {
-        if (!isset($this->definitions[$id]) && class_exists($id)) {
+        if (! isset($this->definitions[$id]) && class_exists($id)) {
             $this->add($id);
         }
+
         return isset($this->definitions[$id]) ||
                 isset($this->services[$id]) ||
                 $this->isAlias($id);
@@ -356,7 +357,7 @@ class ContainerAbstract implements ContainerInterface
         return $instance;
     }
 
-// TODO : méthode à virer !!!!
+    // TODO : méthode à virer !!!!
     protected function convertAssign(array $arguments): array
     {
         $argumentsToReturn = [];
@@ -365,8 +366,7 @@ class ContainerAbstract implements ContainerInterface
                 if (array_key_exists('value', $value)) {
                     $argumentsToReturn[$key] = $value['value'];
                 }
-                }
-            else {
+            } else {
                 if ($this->has($value)) {
                     $argumentsToReturn[$key] = $this->get($value);
                 }

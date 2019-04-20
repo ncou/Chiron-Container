@@ -10,12 +10,12 @@ use PHPUnit\Framework\TestCase;
 
 class ContainerTest extends TestCase
 {
-     /**
+    /**
      * Asserts that the container can add and get a service defined as shared.
      */
     public function testContainerAddsAndGetsSharedByDefault()
     {
-        $container = (new Container)->defaultToShared();
+        $container = (new Container())->defaultToShared();
         $container->add(Foo::class);
 
         $this->assertTrue($container->has(Foo::class));
@@ -27,12 +27,13 @@ class ContainerTest extends TestCase
         $this->assertInstanceOf(Foo::class, $fooTwo);
         $this->assertSame($fooOne, $fooTwo);
     }
+
     /**
      * Asserts that the container can add and get a service defined as non-shared with defaultToShared enabled.
      */
     public function testContainerAddsNonSharedWithSharedByDefault()
     {
-        $container = (new Container)->defaultToShared();
+        $container = (new Container())->defaultToShared();
         $container->add(Foo::class, null, false);
 
         $this->assertTrue($container->has(Foo::class));
@@ -254,8 +255,6 @@ class ContainerTestHttpController
     }
 }
 
-
 class Foo
 {
-
 }
