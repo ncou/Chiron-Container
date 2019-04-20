@@ -149,7 +149,7 @@ class BuildTest extends TestCase
     {
         $container = new Container();
 
-        $container->add(BuildTestHasTypedParamString::class ,new BuildTestHasTypedParamString('bar'));
+        $container->add(BuildTestHasTypedParamString::class, new BuildTestHasTypedParamString('bar'));
 
         $object = $container->build(BuildTestClassInstance::class);
 

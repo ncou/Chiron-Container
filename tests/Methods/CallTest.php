@@ -180,7 +180,7 @@ class CallTest extends TestCase
 
         $expected = new CallTestCallWithOnlyAlias(1111);
 
-        $container->add(CallTestCallWithOnlyAlias::class , $expected);
+        $container->add(CallTestCallWithOnlyAlias::class, $expected);
 
         $actual = $container->call(function (CallTestCallWithOnlyAliasInterface $depend) {
             return $depend;

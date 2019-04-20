@@ -9,7 +9,6 @@ class Definition implements DefinitionInterface
     /** @var array */
     private $assigns = [];
 
-
     /**
      * {@inheritdoc}
      */
@@ -30,7 +29,6 @@ class Definition implements DefinitionInterface
         return $this;
     }
 
-
     public function getAssigns(): array
     {
         return $this->convertAssign($this->assigns);
@@ -50,7 +48,7 @@ class Definition implements DefinitionInterface
                 if (array_key_exists('value', $value)) {
                     $argumentsToReturn[$key] = $value['value'];
                 }
-            //} else {
+                //} else {
             //    if ($this->container->has($value)) {
             //        $argumentsToReturn[$key] = $this->container->get($value);
             //    }
@@ -60,31 +58,25 @@ class Definition implements DefinitionInterface
         return $argumentsToReturn;
     }
 
-
-
-
-
-
-
-
-
     /**
      * @var string
      */
     protected $alias;
+
     /**
      * @var mixed
      */
     protected $concrete;
+
     /**
-     * @var boolean
+     * @var bool
      */
     protected $shared = false;
+
     /**
      * @var array
      */
     protected $arguments = [];
-
 
     /**
      * Constructor.
@@ -95,37 +87,42 @@ class Definition implements DefinitionInterface
     public function __construct(string $id, $concrete = null)
     {
         $concrete = $concrete ?? $id;
-        $this->alias    = $id;
+        $this->alias = $id;
         $this->concrete = $concrete;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function setAlias(string $id) : DefinitionInterface
+    public function setAlias(string $id): DefinitionInterface
     {
         $this->alias = $id;
+
         return $this;
     }
+
     /**
      * {@inheritdoc}
      */
-    public function getAlias() : string
+    public function getAlias(): string
     {
         return $this->alias;
     }
+
     /**
      * {@inheritdoc}
      */
-    public function setShared(bool $shared = true) : DefinitionInterface
+    public function setShared(bool $shared = true): DefinitionInterface
     {
         $this->shared = $shared;
+
         return $this;
     }
+
     /**
      * {@inheritdoc}
      */
-    public function isShared() : bool
+    public function isShared(): bool
     {
         return $this->shared;
     }
@@ -137,32 +134,36 @@ class Definition implements DefinitionInterface
     {
         return $this->concrete;
     }
+
     /**
      * {@inheritdoc}
      */
-    public function setConcrete($concrete) : DefinitionInterface
+    public function setConcrete($concrete): DefinitionInterface
     {
         $this->concrete = $concrete;
+
         return $this;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function addArgument($arg) : DefinitionInterface
+    public function addArgument($arg): DefinitionInterface
     {
         $this->arguments[] = $arg;
+
         return $this;
     }
+
     /**
      * {@inheritdoc}
      */
-    public function addArguments(array $args) : DefinitionInterface
+    public function addArguments(array $args): DefinitionInterface
     {
         foreach ($args as $arg) {
             $this->addArgument($arg);
         }
+
         return $this;
     }
-
 }

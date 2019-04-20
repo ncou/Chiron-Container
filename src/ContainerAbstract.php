@@ -4,29 +4,11 @@ declare(strict_types=1);
 
 namespace Chiron\Container;
 
-
-use Chiron\Container\Exception\CannotChangeException;
-use Chiron\Container\Exception\CannotFindParameterException;
-use Chiron\Container\Exception\CannotResolveException;
-use Chiron\Container\Exception\DependencyException;
-use Chiron\Container\Exception\NullReferenceException;
-
 use Chiron\Container\Exception\ContainerException;
 use Chiron\Container\Exception\EntityNotFoundException;
-
-use Chiron\Container\Reflection\ReflectionCallable;
 use Closure;
 use InvalidArgumentException;
-use LogicException;
-
-use Psr\Container\ContainerInterface as PsrContainerInterface;
 use Psr\Container\ContainerExceptionInterface;
-
-use ReflectionClass;
-use ReflectionException;
-use ReflectionFunctionAbstract;
-use Generator;
-use ArrayAccess;
 
 // TODO : créer une méthode singleton() ou share() => https://github.com/illuminate/container/blob/master/Container.php#L354
 // https://github.com/thephpleague/container/blob/master/src/Container.php#L92
@@ -36,16 +18,10 @@ use ArrayAccess;
 
 class ContainerAbstract implements ContainerInterface
 {
-
-
     /**
-     * @var boolean
+     * @var bool
      */
     protected $defaultToShared = false;
-
-
-
-
 
     /** @var \Wandu\DI\ContainerInterface */
     //public static $instance;
@@ -84,17 +60,16 @@ class ContainerAbstract implements ContainerInterface
     /**
      * Whether the container should default to defining shared definitions.
      *
-     * @param boolean $shared
+     * @param bool $shared
      *
      * @return self
      */
-    public function defaultToShared(bool $shared = true) : ContainerInterface
+    public function defaultToShared(bool $shared = true): ContainerInterface
     {
         $this->defaultToShared = $shared;
 
         return $this;
     }
-
 
     /**
      * {@inheritdoc}
@@ -162,9 +137,7 @@ class ContainerAbstract implements ContainerInterface
 
     public function destroy(...$names)
     {
-
         foreach ($names as $name) {
-
             unset(
                 $this->definitions[$name],
                 $this->instances[$name],
@@ -230,7 +203,6 @@ class ContainerAbstract implements ContainerInterface
         );
     }*/
 
-
     /**
      * Proxy to add with shared as true.
      *
@@ -239,7 +211,7 @@ class ContainerAbstract implements ContainerInterface
      *
      * @return \League\Container\Definition\DefinitionInterface
      */
-    public function share(string $id, $concrete = null) : DefinitionInterface
+    public function share(string $id, $concrete = null): DefinitionInterface
     {
         return $this->add($id, $concrete, true);
     }
@@ -247,13 +219,13 @@ class ContainerAbstract implements ContainerInterface
     /**
      * Add an item to the container.
      *
-     * @param string  $id
-     * @param mixed   $concrete
-     * @param boolean $shared
+     * @param string $id
+     * @param mixed  $concrete
+     * @param bool   $shared
      *
      * @return \League\Container\Definition\DefinitionInterface
      */
-    public function add(string $id, $concrete = null, bool $shared = null) : DefinitionInterface
+    public function add(string $id, $concrete = null, bool $shared = null): DefinitionInterface
     {
         // handle special case when the $id is the interface name and the $concrete the real class.
         // TODO : bout de code à virer si on recherche directement avec le getAlias du definition
@@ -274,7 +246,6 @@ class ContainerAbstract implements ContainerInterface
 
         return $concrete;
     }
-
 
     /**
      * {@inheritdoc}
@@ -332,7 +303,6 @@ class ContainerAbstract implements ContainerInterface
         return $this->definitions[$name];
     }
 
-
     /**
      * @param string $name
      *
@@ -374,5 +344,4 @@ class ContainerAbstract implements ContainerInterface
 
         return $instance;
     }
-
 }

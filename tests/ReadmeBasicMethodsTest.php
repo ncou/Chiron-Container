@@ -34,7 +34,7 @@ class ReadmeBasicMethodsTest extends TestCase
         $container[Client::class]; // return Client Object
 
 // $container['client'] === $container[Client::class]
-        static::assertSame($container['client'],$container[Client::class]
+        static::assertSame($container['client'], $container[Client::class]
 );
         /* } */
     }
