@@ -30,8 +30,7 @@ class ContainerAbstract implements ContainerInterface
     protected $definitions = [];
 
     /** @var array */
-    // TODO : renommer ce tableau en "services[]" ????
-    protected $instances = [];
+    protected $services = [];
 
     /** @var array */
     protected $classes = [];
@@ -83,6 +82,7 @@ class ContainerAbstract implements ContainerInterface
      * {@inheritdoc}
      */
     // TODO : mettre en place un systéme de cache dans le cas ou on fait un has() ca va instancier la classe il faudrait la mettre en cache pour éviter de devoir refaire la même chose si on doit faire un get() dans la foulée !!!
+    /*
     public function has($name)
     {
         try {
@@ -94,6 +94,16 @@ class ContainerAbstract implements ContainerInterface
         }
 
         return false;
+    }*/
+
+    public function has($id)
+    {
+        if (!isset($this->definitions[$id]) && class_exists($id)) {
+            $this->add($id);
+        }
+        return isset($this->definitions[$id]) ||
+                isset($this->services[$id]) ||
+                $this->isAlias($id);
     }
 
     /*
@@ -140,7 +150,7 @@ class ContainerAbstract implements ContainerInterface
         foreach ($names as $name) {
             unset(
                 $this->definitions[$name],
-                $this->instances[$name],
+                $this->services[$name],
                 $this->classes[$name],
                 $this->closures[$name]
                 // TODO : il faudrait aussi supprimer l'alias !!!!!
@@ -314,8 +324,8 @@ class ContainerAbstract implements ContainerInterface
         $name = $this->getAlias($name);
 
         // TODO : il faudrait aussi vérifier si $new est à false avant de rentrer dans ce test. non ????
-        if (array_key_exists($name, $this->instances)) {
-            return $this->instances[$name];
+        if (array_key_exists($name, $this->services)) {
+            return $this->services[$name];
         }
         if (! array_key_exists($name, $this->definitions)) {
             if (! class_exists($name)) {
@@ -340,7 +350,7 @@ class ContainerAbstract implements ContainerInterface
         }*/
 
         if ($definition->isShared() && $new === false) {
-            $this->instances[$name] = $instance;
+            $this->services[$name] = $instance;
         }
 
         return $instance;

@@ -10,16 +10,41 @@ use PHPUnit\Framework\TestCase;
 
 class ContainerTest extends TestCase
 {
-    /*
-        public function testConstruct()
-        {
-            $container = new Container();
-    
-            static::assertSame($container, $container->get('container'));
-            static::assertSame($container, $container->get(Container::class));
-            static::assertSame($container, $container->get(ContainerInterface::class));
-        }
-    */
+     /**
+     * Asserts that the container can add and get a service defined as shared.
+     */
+    public function testContainerAddsAndGetsSharedByDefault()
+    {
+        $container = (new Container)->defaultToShared();
+        $container->add(Foo::class);
+
+        $this->assertTrue($container->has(Foo::class));
+
+        $fooOne = $container->get(Foo::class);
+        $fooTwo = $container->get(Foo::class);
+
+        $this->assertInstanceOf(Foo::class, $fooOne);
+        $this->assertInstanceOf(Foo::class, $fooTwo);
+        $this->assertSame($fooOne, $fooTwo);
+    }
+    /**
+     * Asserts that the container can add and get a service defined as non-shared with defaultToShared enabled.
+     */
+    public function testContainerAddsNonSharedWithSharedByDefault()
+    {
+        $container = (new Container)->defaultToShared();
+        $container->add(Foo::class, null, false);
+
+        $this->assertTrue($container->has(Foo::class));
+
+        $fooOne = $container->get(Foo::class);
+        $fooTwo = $container->get(Foo::class);
+
+        $this->assertInstanceOf(Foo::class, $fooOne);
+        $this->assertInstanceOf(Foo::class, $fooTwo);
+        $this->assertNotSame($fooOne, $fooTwo);
+    }
+
     public function testHas()
     {
         $container = new Container();
@@ -58,13 +83,13 @@ class ContainerTest extends TestCase
         {
             $container = new Container();
             $xml = new ContainerTestXmlRenderer();
-    
+
             $container->instance('xml', $xml);
             $container->instance('is_debug', true);
-    
+
             static::assertSame($xml, $container->get('xml'));
             static::assertSame(true, $container->get('is_debug'));
-    
+
             // "get" map to offsetGet
             static::assertSame($xml, $container['xml']);
             static::assertSame(true, $container['is_debug']);
@@ -227,4 +252,10 @@ class ContainerTestHttpController
         $this->renderer = $renderer;
         $this->config = $config;
     }
+}
+
+
+class Foo
+{
+
 }
