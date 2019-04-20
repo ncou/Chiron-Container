@@ -1,6 +1,6 @@
 <?php
 
-namespace Wandu\DI\Descriptor;
+namespace Chiron\Container\Definition;
 
 use Chiron\Container\Container;
 use PHPUnit\Framework\TestCase;

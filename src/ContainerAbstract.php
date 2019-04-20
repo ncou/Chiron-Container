@@ -23,10 +23,10 @@ class ContainerAbstract implements ContainerInterface
      */
     protected $defaultToShared = false;
 
-    /** @var \Wandu\DI\ContainerInterface */
+    /** @var \Chiron\Container\ContainerInterface */
     //public static $instance;
 
-    /** @var \Wandu\DI\Definition[] */
+    /** @var \Chiron\Container\Definition[] */
     protected $definitions = [];
 
     /** @var array */
@@ -328,6 +328,7 @@ class ContainerAbstract implements ContainerInterface
         //$definition = $this->getDefinition($name);
 
         $instance = $this->resolver->resolve($definition->getConcrete(), $definition->getAssigns());
+        //$instance = $this->resolver->resolve($definition->getConcrete(), $this->convertAssign($definition->assigns));
 
         /*
         if (array_key_exists($name, $this->classes)) {
@@ -343,5 +344,25 @@ class ContainerAbstract implements ContainerInterface
         }
 
         return $instance;
+    }
+
+// TODO : méthode à virer !!!!
+    protected function convertAssign(array $arguments): array
+    {
+        $argumentsToReturn = [];
+        foreach ($arguments as $key => $value) {
+            if (is_array($value)) {
+                if (array_key_exists('value', $value)) {
+                    $argumentsToReturn[$key] = $value['value'];
+                }
+                }
+            else {
+                if ($this->has($value)) {
+                    $argumentsToReturn[$key] = $this->get($value);
+                }
+            }
+        }
+
+        return $argumentsToReturn;
     }
 }

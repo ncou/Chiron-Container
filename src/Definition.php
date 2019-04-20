@@ -7,7 +7,7 @@ namespace Chiron\Container;
 class Definition implements DefinitionInterface
 {
     /** @var array */
-    private $assigns = [];
+    public $assigns = [];
 
     /**
      * {@inheritdoc}
@@ -39,7 +39,7 @@ class Definition implements DefinitionInterface
      *
      * @return array
      */
-    // TODO : méthode à déplacer dans la classe Descriptor.
+    // TODO : code à virer
     protected function convertAssign(array $arguments): array
     {
         $argumentsToReturn = [];

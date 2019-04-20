@@ -25,6 +25,7 @@ use ReflectionObject;
 
 // TODO : améliorer le Circular exception avec le code : https://github.com/symfony/dependency-injection/blob/master/Container.php#L236
 
+// TODO : classe à renommer en DefinitionResolver
 class ReflectionResolver
 {
     protected $container;
@@ -160,15 +161,15 @@ class ReflectionResolver
             if ($this->isCallableWithAtSign($callback) || $defaultMethod) {
                 return $this->callClass($callback, $parameters, $defaultMethod);
             }
-    
-    
+
+
             if (! is_callable($callback)) {
                 throw new InvalidArgumentException(sprintf(
                     '(%s) is not resolvable.',
                     is_array($callback) || is_object($callback) || is_null($callback) ? json_encode($callback) : $callback
                 ));
             }
-    
+
             try {
                 return call_user_func_array(
                     $callback,
@@ -233,7 +234,7 @@ class ReflectionResolver
     /*
         public function call_save(callable $callable, array $args = [])
         {
-    
+
             if (is_string($callable) && strpos($callable, '::') !== false) {
                 $callable = explode('::', $callable);
             }
@@ -252,7 +253,7 @@ class ReflectionResolver
                 return $reflection->invokeArgs($callable, $this->getParameters($reflection, $args));
             }
             $reflection = new ReflectionFunction($callable);
-    
+
             return $reflection->invokeArgs($this->getParameters($reflection, $args));
         }
     */
