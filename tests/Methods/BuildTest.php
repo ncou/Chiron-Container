@@ -11,8 +11,8 @@ use stdClass;
 class BuildTest extends TestCase
 {
     /**
-     * @expectedException Chiron\Container\Exception\CannotResolveException
-     * @expectedExceptionMessage cannot resolve the "typedParam" parameter
+     * @expectedException Chiron\Container\Exception\ContainerException
+     * @expectedExceptionMessage Parameter 'typedParam' cannot be resolved
      */
     public function testBuildAutoResolveFail()
     {
@@ -24,7 +24,7 @@ class BuildTest extends TestCase
     public function testBuildAutoResolveSuccess()
     {
         $container = new Container();
-        $container->bind(BuildTestDependencyInterface::class, BuildTestDependency::class);
+        $container->add(BuildTestDependencyInterface::class, BuildTestDependency::class);
 
         $object = $container->build(BuildTestHasTypedParam::class);
         static::assertInstanceOf(BuildTestHasTypedParam::class, $object);
@@ -46,8 +46,8 @@ class BuildTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\CannotResolveException
-     * @expectedExceptionMessage cannot resolve the "untypedParam" parameter
+     * @expectedException Chiron\Container\Exception\ContainerException
+     * @expectedExceptionMessage Parameter 'untypedParam' cannot be resolved
      */
     public function testBuildUntypedParamClassFail()
     {
@@ -113,8 +113,8 @@ class BuildTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\CannotResolveException
-     * @expectedExceptionMessage cannot resolve the "param1" parameter
+     * @expectedException Chiron\Container\Exception\ContainerException
+     * @expectedExceptionMessage Parameter 'param1' cannot be resolved
      */
     public function testBuildComplexParamsClassFail_1()
     {
@@ -124,14 +124,14 @@ class BuildTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\CannotResolveException
-     * @expectedExceptionMessage cannot resolve the "param2" parameter
+     * @expectedException Chiron\Container\Exception\ContainerException
+     * @expectedExceptionMessage Parameter 'param2' cannot be resolved
      */
     public function testBuildComplexParamsClassFail_2()
     {
         $container = new Container();
 
-        $container->bind(BuildTestDependencyInterface::class, BuildTestDependency::class);
+        $container->add(BuildTestDependencyInterface::class, BuildTestDependency::class);
 
         $container->build(BuildTestHasComplexParam::class);
     }
@@ -149,7 +149,7 @@ class BuildTest extends TestCase
     {
         $container = new Container();
 
-        $container = $container->with([BuildTestHasTypedParamString::class => new BuildTestHasTypedParamString('bar')]);
+        $container->add(BuildTestHasTypedParamString::class ,new BuildTestHasTypedParamString('bar'));
 
         $object = $container->build(BuildTestClassInstance::class);
 

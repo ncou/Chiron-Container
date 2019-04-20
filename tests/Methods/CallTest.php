@@ -11,8 +11,8 @@ use stdClass;
 class CallTest extends TestCase
 {
     /**
-     * @expectedException Chiron\Container\Exception\CannotResolveException
-     * @expectedExceptionMessage cannot resolve the "param" parameter
+     * @expectedException Chiron\Container\Exception\ContainerException
+     * @expectedExceptionMessage Parameter 'param' cannot be resolved
      */
     public function testCallAutoResolveFail()
     {
@@ -25,7 +25,7 @@ class CallTest extends TestCase
     {
         $container = new Container();
 
-        $container->bind(CallTestDependencyInterface::class, CallTestDependency::class);
+        $container->add(CallTestDependencyInterface::class, CallTestDependency::class);
 
         $result = $container->call(__NAMESPACE__ . '\\callTestHasTypedParam');
         static::assertInstanceOf(CallTestDependencyInterface::class, $result);
@@ -33,8 +33,8 @@ class CallTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\CannotResolveException
-     * @expectedExceptionMessage cannot resolve the "param" parameter
+     * @expectedException Chiron\Container\Exception\ContainerException
+     * @expectedExceptionMessage Parameter 'param' cannot be resolved
      */
     public function testCallSingleParamClassWithArgumentsFail()
     {
@@ -56,8 +56,8 @@ class CallTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\CannotResolveException
-     * @expectedExceptionMessage cannot resolve the "param1" parameter
+     * @expectedException Chiron\Container\Exception\ContainerException
+     * @expectedExceptionMessage Parameter 'param1' cannot be resolved
      */
     public function testCallMultiParamsClassWithArgumentsFail_1()
     {
@@ -67,14 +67,14 @@ class CallTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\CannotResolveException
-     * @expectedExceptionMessage cannot resolve the "param2" parameter
+     * @expectedException Chiron\Container\Exception\ContainerException
+     * @expectedExceptionMessage Parameter 'param2' cannot be resolved
      */
     public function testCallMultiParamsClassWithArgumentsFail_2()
     {
         $container = new Container();
 
-        $container->bind(CallTestDependencyInterface::class, CallTestDependency::class);
+        $container->add(CallTestDependencyInterface::class, CallTestDependency::class);
 
         $container->call(__NAMESPACE__ . '\\callTestHasComplexParam');
     }
@@ -83,7 +83,7 @@ class CallTest extends TestCase
     {
         $container = new Container();
 
-        $container->bind(CallTestDependencyInterface::class, CallTestDependency::class);
+        $container->add(CallTestDependencyInterface::class, CallTestDependency::class);
 
         // only sequential
         $result = $container->call(__NAMESPACE__ . '\\callTestHasComplexParam', [
@@ -160,8 +160,8 @@ class CallTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\CannotResolveException
-     * @expectedExceptionMessage cannot resolve the "param" parameter
+     * @expectedException Chiron\Container\Exception\ContainerException
+     * @expectedExceptionMessage Parameter 'param' cannot be resolved
      */
     public function testCallWithOnlyAliasFail()
     {
@@ -180,11 +180,12 @@ class CallTest extends TestCase
 
         $expected = new CallTestCallWithOnlyAlias(1111);
 
-        $actual = $container->with([
-            CallTestCallWithOnlyAlias::class => $expected,
-        ])->call(function (CallTestCallWithOnlyAliasInterface $depend) {
+        $container->add(CallTestCallWithOnlyAlias::class , $expected);
+
+        $actual = $container->call(function (CallTestCallWithOnlyAliasInterface $depend) {
             return $depend;
         });
+
         static::assertSame($expected, $actual);
     }
 }

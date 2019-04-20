@@ -7,11 +7,11 @@ use PHPUnit\Framework\TestCase;
 
 class AssignValueTest extends TestCase
 {
-    public function testAssignValueByBind()
+    public function testAssignValueByBinding()
     {
         // bind interface
         $container = new Container();
-        $container->bind(AssignValueTestClassIF::class, AssignValueTestClass::class)->assign('dep', ['value' => 'hello dependency!']);
+        $container->add(AssignValueTestClassIF::class, AssignValueTestClass::class)->assign('dep', ['value' => 'hello dependency!']);
 
         $object = $container->get(AssignValueTestClass::class);
         static::assertInstanceOf(AssignValueTestClass::class, $object);
@@ -23,7 +23,7 @@ class AssignValueTest extends TestCase
 
         // bind class directly
         $container = new Container();
-        $container->bind(AssignValueTestClass::class)->assign('dep', ['value' => 'hello dependency!']);
+        $container->add(AssignValueTestClass::class)->assign('dep', ['value' => 'hello dependency!']);
 
         $object = $container->get(AssignValueTestClass::class);
         static::assertInstanceOf(AssignValueTestClass::class, $object);
@@ -33,7 +33,7 @@ class AssignValueTest extends TestCase
     public function testAssignValueByClosure()
     {
         $container = new Container();
-        $container->bind(AssignValueTestClassIF::class, function ($dep) {
+        $container->add(AssignValueTestClassIF::class, function ($dep) {
             return new AssignValueTestClass($dep . ' from closure');
         })->assign('dep', ['value' => 'hello dependency!']);
 

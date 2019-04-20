@@ -20,7 +20,7 @@ class NotInstantiableTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\NullReferenceException
+     * @expectedException Chiron\Container\Exception\EntityNotFoundException
      * @expectedExceptionMessage it was not found;
      */
     public function testBuildInterface()
@@ -31,7 +31,7 @@ class NotInstantiableTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\DependencyException
+     * @expectedException Chiron\Container\Exception\ContainerException
      * @expectedExceptionMessage cannot be resolved: the class is not instantiable
      */
     public function testBuildAbstractClass()
@@ -42,7 +42,7 @@ class NotInstantiableTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\NullReferenceException
+     * @expectedException Chiron\Container\Exception\EntityNotFoundException
      * @expectedExceptionMessage it was not found;
      */
     public function testBuildTrait()
@@ -53,7 +53,7 @@ class NotInstantiableTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\DependencyException
+     * @expectedException Chiron\Container\Exception\ContainerException
      * @expectedExceptionMessage cannot be resolved: the class is not instantiable
      */
     public function testBuildPrivateConstructorClass()

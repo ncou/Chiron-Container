@@ -14,13 +14,14 @@ class ReadmeBasicMethodsTest extends TestCase
     {
         /* simple_example { */
         $container = new Container();
+        $container->add(ContainerInterface::class, $container);
 
-        $container->instance('config', [
+        $container->add('config', [
             'username' => 'db_username',
             'password' => 'db_password',
         ]);
-        $container->bind(DbAdapterInterface::class, MySqlAdapter::class);
-        $container->closure(Client::class, function (ContainerInterface $container) {
+        $container->add(DbAdapterInterface::class, MySqlAdapter::class);
+        $container->share(Client::class, function (ContainerInterface $container) {
             return new Client(
         $container[DbAdapterInterface::class],
         $container['config']['username'],
@@ -30,12 +31,10 @@ class ReadmeBasicMethodsTest extends TestCase
         $container->alias('client', Client::class);
 
         $container['client']; // return Client Object
-$container[Client::class]; // return Client Object
+        $container[Client::class]; // return Client Object
 
 // $container['client'] === $container[Client::class]
-        static::assertSame(
-    $container['client'],
-    $container[Client::class]
+        static::assertSame($container['client'],$container[Client::class]
 );
         /* } */
     }
@@ -45,7 +44,7 @@ $container[Client::class]; // return Client Object
         /* instance_example { */
         $container = new Container();
 
-        $container->instance('config1', [
+        $container->add('config1', [
             'username' => 'db_username',
             'password' => 'db_password',
         ]);
@@ -74,7 +73,7 @@ $container[Client::class]; // return Client Object
         /* closure_example { */
         $container = new Container();
 
-        $container->closure(DbAdapterInterface::class, function () {
+        $container->add(DbAdapterInterface::class, function () {
             return new MySqlAdapter();
         });
 
@@ -91,7 +90,7 @@ $container[Client::class]; // return Client Object
         /* bind_example { */
         $container = new Container();
 
-        $container->bind(DbAdapterInterface::class, MySqlAdapter::class);
+        $container->share(DbAdapterInterface::class, MySqlAdapter::class);
 
         static::assertInstanceOf(
     DbAdapterInterface::class,
@@ -113,7 +112,7 @@ $container[Client::class]; // return Client Object
         /* alias_example { */
         $container = new Container();
 
-        $container->bind(DbAdapterInterface::class, MySqlAdapter::class);
+        $container->add(DbAdapterInterface::class, MySqlAdapter::class);
         $container->alias('adapter', DbAdapterInterface::class);
 
         // get by alias name

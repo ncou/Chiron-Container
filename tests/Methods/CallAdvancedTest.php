@@ -42,15 +42,18 @@ class CallAdvancedTest extends TestCase
         $this->assertEquals('taylor', $result[1]);
     }
 
+/*
+// TODO : regarder si ce test que tu as rajouté est utile !!!!
     public function testClosureCallWithInjectedDependency()
     {
         $container = new Container();
-        $container->call(function (ContainerConcreteStub $stub) {
+        $result = $container->call(function (ContainerConcreteStub $stub) {
         }, ['foo' => 'bar']);
 
-        $container->call(function (ContainerConcreteStub $stub) {
+        $result = $container->call(function (ContainerConcreteStub $stub) {
         }, ['foo' => 'bar', 'stub' => new ContainerConcreteStub()]);
     }
+*/
 
     public function testCallWithCallableArray()
     {
@@ -77,8 +80,8 @@ class CallAdvancedTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\CannotResolveException
-     * @expectedExceptionMessage cannot resolve the "name" parameter
+     * @expectedException Chiron\Container\Exception\ContainerException
+     * @expectedExceptionMessage Parameter 'name' cannot be resolved
      */
     public function testCallWithoutBoundClassThrowEception()
     {
@@ -91,7 +94,7 @@ class CallAdvancedTest extends TestCase
     {
         $container = new Container();
 
-        $container->bind(AssignTestClass::class)->assign('name', ['value' => 'foo']);
+        $container->add(AssignTestClass::class)->assign('name', ['value' => 'foo']);
 
         $result = $container->call(AssignTestClass::class . '@getName');
         $this->assertEquals('foo', $result);
@@ -101,8 +104,8 @@ class CallAdvancedTest extends TestCase
     }
 
     /**
-     * @expectedException \ReflectionException
-     * @expectedExceptionMessage Function ContainerTestCallStub() does not exist
+     * @expectedException \InvalidArgumentException
+     * @expectedExceptionMessage (ContainerTestCallStub) is not resolvable.
      */
     public function testCallWithAtSignBasedClassReferencesWithoutMethodThrowsException()
     {

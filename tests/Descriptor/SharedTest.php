@@ -6,13 +6,13 @@ use Chiron\Container\Container;
 use PHPUnit\Framework\TestCase;
 use stdClass;
 
-class FactoryTest extends TestCase
+class SharedTest extends TestCase
 {
-    public function testBindClosureFactory()
+    public function testBindClosureShared()
     {
         $container = new Container();
 
-        $container->bind('obj1', function () {
+        $container->share('obj1', function () {
             return new stdClass();
         });
 
@@ -22,9 +22,10 @@ class FactoryTest extends TestCase
         static::assertSame($object1, $container['obj1']);
         static::assertSame($object1, $container['obj1']);
 
-        $container->bind('obj2', function () {
+        $container->share('obj2', function () {
             return new stdClass();
-        })->factory();
+        })->setShared(false);
+
         $object2 = $container['obj2'];
 
         // all not same
@@ -41,33 +42,33 @@ class FactoryTest extends TestCase
         static::assertEquals($object2_1, $object2_2);
     }
 
-    public function testBindFactory()
+    public function testBindShared()
     {
         $container = new Container();
 
-        $container->bind(FactoryTestIF::class, FactoryTestClass::class);
+        $container->share(SharedTestIF::class, SharedTestClass::class);
 
         // all same
-        $object1 = $container[FactoryTestIF::class];
-        static::assertSame($object1, $container[FactoryTestIF::class]);
-        static::assertSame($object1, $container[FactoryTestIF::class]);
-        static::assertSame($object1, $container[FactoryTestIF::class]);
+        $object1 = $container[SharedTestIF::class];
+        static::assertSame($object1, $container[SharedTestIF::class]);
+        static::assertSame($object1, $container[SharedTestIF::class]);
+        static::assertSame($object1, $container[SharedTestIF::class]);
 
         // reset
         $container = new Container();
 
         $container
-            ->bind(FactoryTestIF::class, FactoryTestClass::class)
-            ->factory();
-        $object2 = $container[FactoryTestIF::class];
+            ->share(SharedTestIF::class, SharedTestClass::class)
+            ->setShared(false);
+        $object2 = $container[SharedTestIF::class];
 
         // all not same
-        $object2_1 = $container[FactoryTestIF::class];
+        $object2_1 = $container[SharedTestIF::class];
 
         static::assertNotSame($object2, $object2_1);
         static::assertEquals($object2, $object2_1);
 
-        $object2_2 = $container[FactoryTestIF::class];
+        $object2_2 = $container[SharedTestIF::class];
 
         static::assertNotSame($object2, $object2_2);
         static::assertEquals($object2, $object2_2);
@@ -76,9 +77,9 @@ class FactoryTest extends TestCase
     }
 }
 
-interface FactoryTestIF
+interface SharedTestIF
 {
 }
-class FactoryTestClass implements FactoryTestIF
+class SharedTestClass implements SharedTestIF
 {
 }

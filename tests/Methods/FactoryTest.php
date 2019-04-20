@@ -13,7 +13,7 @@ class FactoryTest extends TestCase
     {
         $container = new Container();
 
-        $container->bind('name', function () {
+        $container->add('name', function () {
             return 'Taylor';
         });
 

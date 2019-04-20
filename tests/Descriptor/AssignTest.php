@@ -8,14 +8,14 @@ use PHPUnit\Framework\TestCase;
 class AssignTest extends TestCase
 {
     /**
-     * @expectedException Chiron\Container\Exception\CannotResolveException
-     * @expectedExceptionMessage cannot resolve the "dep" parameter
+     * @expectedException Chiron\Container\Exception\ContainerException
+     * @expectedExceptionMessage Parameter 'dep' cannot be resolved
      */
     public function testAssignFailByAssigningUnknown()
     {
         // assign unknown
         $container = new Container();
-        $container->bind(AssignTestClass::class)->assign('dep', 'unknown');
+        $container->add(AssignTestClass::class)->assign('dep', 'unknown');
 
         $container->get(AssignTestClass::class);
     }
@@ -24,19 +24,19 @@ class AssignTest extends TestCase
     {
         // assign unknown
         $container = new Container();
-        $container->bind(AssignTestClass::class)->assign('dep', ['value' => 'hello']);
+        $container->add(AssignTestClass::class)->assign('dep', ['value' => 'hello']);
 
         $object = $container->get(AssignTestClass::class);
         static::assertInstanceOf(AssignTestClass::class, $object);
         static::assertSame('hello', $object->getDep());
     }
 
-    public function testAssignByBind()
+    public function testAssignByBinding()
     {
         // bind interface
         $container = new Container();
-        $container->instance('dep_dependency', 'hello dependency!');
-        $container->bind(AssignTestClassIF::class, AssignTestClass::class)->assign('dep', 'dep_dependency');
+        $container->add('dep_dependency', 'hello dependency!');
+        $container->add(AssignTestClassIF::class, AssignTestClass::class)->assign('dep', 'dep_dependency');
 
         $object = $container->get(AssignTestClass::class);
         static::assertInstanceOf(AssignTestClass::class, $object);
@@ -48,8 +48,8 @@ class AssignTest extends TestCase
 
         // bind class directly
         $container = new Container();
-        $container->instance('dep_dependency', 'hello dependency!');
-        $container->bind(AssignTestClass::class)->assign('dep', 'dep_dependency');
+        $container->add('dep_dependency', 'hello dependency!');
+        $container->add(AssignTestClass::class)->assign('dep', 'dep_dependency');
 
         $object = $container->get(AssignTestClass::class);
         static::assertInstanceOf(AssignTestClass::class, $object);
@@ -57,13 +57,13 @@ class AssignTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\CannotResolveException
-     * @expectedExceptionMessage cannot resolve the "dep" parameter
+     * @expectedException Chiron\Container\Exception\ContainerException
+     * @expectedExceptionMessage Parameter 'dep' cannot be resolved
      */
     public function testAssignFailByClosure()
     {
         $container = new Container();
-        $container->bind(AssignTestClass::class, function ($dep) {
+        $container->add(AssignTestClass::class, function ($dep) {
             return new AssignTestClass($dep . ' from closure');
         });
 
@@ -73,8 +73,8 @@ class AssignTest extends TestCase
     public function testAssignSuccessByClosure()
     {
         $container = new Container();
-        $container->instance('dep_dependency', 'hello dependency!');
-        $container->bind(AssignTestClassIF::class, function ($dep) {
+        $container->add('dep_dependency', 'hello dependency!');
+        $container->add(AssignTestClassIF::class, function ($dep) {
             return new AssignTestClass($dep . ' from closure');
         })->assign('dep', 'dep_dependency');
 

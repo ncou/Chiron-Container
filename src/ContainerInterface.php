@@ -4,31 +4,41 @@ declare(strict_types=1);
 
 namespace Chiron\Container;
 
-use ArrayAccess;
 use Psr\Container\ContainerInterface as PsrContainerInterface;
 
-interface ContainerInterface extends ArrayAccess, PsrContainerInterface
+interface ContainerInterface extends PsrContainerInterface
 {
     /**
      * @param string[] ...$names
      */
-    public function destroy(...$names);
+    //public function destroy(...$names);
 
     /**
      * @param string $className
      * @param mixed  $value
      *
-     * @return DescriptorInterface
+     * @return DefinitionInterface
      */
-    public function instance(string $className, $value): DescriptorInterface;
+    //public function instance(string $className, $value): DefinitionInterface;
 
     /**
      * @param string          $name
      * @param string|\Closure $className
      *
-     * @return DescriptorInterface
+     * @return DefinitionInterface
      */
-    public function bind(string $name, $className = null): DescriptorInterface;
+    //public function bind(string $name, $className = null): DefinitionInterface;
+
+    /**
+     * Add an item to the container.
+     *
+     * @param string  $id
+     * @param mixed   $concrete
+     * @param boolean $shared
+     *
+     * @return \League\Container\Definition\DefinitionInterface
+     */
+    public function add(string $id, $concrete = null, bool $shared = null) : DefinitionInterface;
 
     /**
      * @param string $alias
@@ -39,16 +49,16 @@ interface ContainerInterface extends ArrayAccess, PsrContainerInterface
     /**
      * @param string $name
      *
-     * @return DescriptorInterface
+     * @return DefinitionInterface
      */
-    public function descriptor(string $name): DescriptorInterface;
+    public function getDefinition(string $name): DefinitionInterface;
 
     /**
      * @param array $arguments
      *
      * @return \Wandu\DI\ContainerInterface
      */
-    public function with(array $arguments = []): ContainerInterface;
+    //public function with(array $arguments = []): ContainerInterface;
 
     /**
      * @param string $className
@@ -56,7 +66,7 @@ interface ContainerInterface extends ArrayAccess, PsrContainerInterface
      *
      * @return object
      */
-    public function build(string $className, array $arguments = []);
+    //public function build(string $className, array $arguments = []);
 
     /**
      * @param callable $callee
@@ -75,5 +85,5 @@ interface ContainerInterface extends ArrayAccess, PsrContainerInterface
      *
      * @return mixed
      */
-    public function call($callback, array $parameters = [], ?string $defaultMethod = null);
+    //public function call($callback, array $parameters = [], ?string $defaultMethod = null);
 }

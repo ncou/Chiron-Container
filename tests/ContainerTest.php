@@ -7,12 +7,11 @@ namespace Chiron\Tests\Container;
 use ArrayObject;
 use Chiron\Container\Container;
 use Chiron\Container\ContainerInterface;
-use Chiron\Container\Exception\CannotChangeException;
-use Chiron\Container\Exception\NullReferenceException;
 use PHPUnit\Framework\TestCase;
 
 class ContainerTest extends TestCase
 {
+/*
     public function testConstruct()
     {
         $container = new Container();
@@ -21,12 +20,12 @@ class ContainerTest extends TestCase
         static::assertSame($container, $container->get(Container::class));
         static::assertSame($container, $container->get(ContainerInterface::class));
     }
-
+*/
     public function testHas()
     {
         $container = new Container();
 
-        $container->instance(ContainerTestRenderable::class, new ContainerTestXmlRenderer());
+        $container->add(ContainerTestRenderable::class, new ContainerTestXmlRenderer());
 
         static::assertTrue($container->has(ContainerTestRenderable::class)); // set by instance
         static::assertTrue($container->has(ContainerTestJsonRenderer::class)); // class true
@@ -46,16 +45,16 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $container->instance('null', null);
+        $container->add('null', null);
 
         static::assertTrue($container->has('null')); // container has null,
         static::assertFalse($container->has('undefined'));
 
-        // "has" map to offsetExists but except null.
-        static::assertFalse(isset($container['null']));
+        static::assertTrue(isset($container['null']));
         static::assertFalse(isset($container['undefined']));
     }
 
+/*
     public function testInstance()
     {
         $container = new Container();
@@ -71,13 +70,15 @@ class ContainerTest extends TestCase
         static::assertSame($xml, $container['xml']);
         static::assertSame(true, $container['is_debug']);
     }
+*/
 
     public function testClosure()
     {
         $container = new Container();
+        $container->add(ContainerInterface::class,$container);
 
-        $container->instance(ContainerTestRenderable::class, $renderer = new ContainerTestXmlRenderer());
-        $container->closure(ContainerTestHttpController::class, function (ContainerInterface $app) {
+        $container->add(ContainerTestRenderable::class, $renderer = new ContainerTestXmlRenderer());
+        $container->share(ContainerTestHttpController::class, function (ContainerInterface $app) {
             return new ContainerTestHttpController($app[ContainerTestRenderable::class], [
                 'username' => 'username string',
                 'password' => 'password string',
@@ -97,8 +98,8 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $container->instance(ContainerTestRenderable::class, $renderer = new ContainerTestXmlRenderer());
-        $container->closure(ContainerTestHttpController::class, function (ContainerTestRenderable $renderable) {
+        $container->add(ContainerTestRenderable::class, $renderer = new ContainerTestXmlRenderer());
+        $container->share(ContainerTestHttpController::class, function (ContainerTestRenderable $renderable) {
             return new ContainerTestHttpController($renderable, [
                 'username' => 'username string',
                 'password' => 'password string',
@@ -119,7 +120,7 @@ class ContainerTest extends TestCase
         $container = new Container();
         $renderer = new ContainerTestXmlRenderer();
 
-        $container->instance(ContainerTestRenderable::class, $renderer);
+        $container->add(ContainerTestRenderable::class, $renderer);
 
         $container->alias('myalias', ContainerTestRenderable::class);
         $container->alias('otheralias', 'myalias');
@@ -137,23 +138,21 @@ class ContainerTest extends TestCase
         static::assertInstanceOf(ContainerTestJsonRenderer::class, $controller);
     }
 
+    /**
+     * @expectedException Chiron\Container\Exception\EntityNotFoundException
+     * @expectedExceptionMessage Service 'unknown' wasn't found in the dependency injection container
+     */
     public function testGetFail()
     {
         $container = new Container();
-
-        try {
-            $container->get('unknown');
-            static::fail();
-        } catch (NullReferenceException $exception) {
-            static::assertEquals('unknown', $exception->getClass());
-        }
+        $container->get('unknown');
     }
 
     public function testDestroy()
     {
         $container = new Container();
 
-        $container->instance('xml', new ContainerTestXmlRenderer());
+        $container->add('xml', new ContainerTestXmlRenderer());
 
         static::assertTrue($container->has('xml'));
 
@@ -166,8 +165,8 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $container->instance('xml1', new ContainerTestXmlRenderer());
-        $container->instance('xml2', new ContainerTestXmlRenderer());
+        $container->add('xml1', new ContainerTestXmlRenderer());
+        $container->add('xml2', new ContainerTestXmlRenderer());
 
         static::assertTrue($container->has('xml1'));
         static::assertTrue($container->has('xml2'));
@@ -176,100 +175,6 @@ class ContainerTest extends TestCase
 
         static::assertFalse($container->has('xml1'));
         static::assertFalse($container->has('xml2'));
-    }
-
-    public function testFrozen()
-    {
-        $container = new Container();
-
-        $container->instance('instance', 'instance string');
-        $container->closure('closure', function () {
-            return 'closure string';
-        });
-        $container->alias('alias', 'closure');
-
-        // all change
-        $container->instance('instance', 'instance string changed');
-        $container->closure('closure', function () {
-            return 'closure string changed';
-        });
-        $container->alias('alias', 'instance');
-
-        // call, then it freeze all values.
-        $container->get('instance');
-        $container->get('closure');
-
-        // now cannot change
-        static::assertException(new CannotChangeException('instance'), function () use ($container) {
-            $container->instance('instance', 'instance string changed 2');
-        });
-
-        static::assertException(new CannotChangeException('closure'), function () use ($container) {
-            $container->closure('closure', function () {
-                return 'closure string change 2';
-            });
-        });
-
-        // also cannot remove
-        static::assertException(new CannotChangeException('instance'), function () use ($container) {
-            $container->offsetUnset('instance');
-        });
-        static::assertException(new CannotChangeException('closure'), function () use ($container) {
-            $container->offsetUnset('closure');
-        });
-    }
-
-    public function testWith()
-    {
-        $container = new Container();
-
-        $instance1 = new ArrayObject();
-        $instance2 = new ArrayObject();
-        $instance3 = new ArrayObject();
-        $instance4 = new ArrayObject();
-
-        $container->instance('instance1', $instance1);
-        $container->instance('instance2', $instance2);
-        $container->instance('instance3', $instance3);
-        $container->instance('instance4', $instance4);
-
-        static::assertNotSame($instance1, $instance2); // same is real same?
-        static::assertSame($instance1, $container->get('instance1'));
-        static::assertSame($instance2, $container->get('instance2'));
-        static::assertSame($instance3, $container->get('instance3'));
-        static::assertSame($instance4, $container->get('instance4'));
-
-        static::assertSame($container, $container->get(Container::class));
-        static::assertSame($container, $container->get(ContainerInterface::class));
-        static::assertSame($container, $container->get('container'));
-
-        $addedInstance1 = new ArrayObject();
-        $addedInstance2 = new ArrayObject();
-
-        $otherContainer = $container->with([
-            'added_instance1' => $addedInstance1,
-            'added_instance2' => $addedInstance2,
-        ]);
-
-        static::assertNotEquals($otherContainer, $container);
-
-        static::assertFalse($container->has('added_instance1'));
-        static::assertFalse($container->has('added_instance2'));
-
-        static::assertTrue($otherContainer->has('added_instance1'));
-        static::assertTrue($otherContainer->has('added_instance2'));
-
-        static::assertSame($instance1, $otherContainer->get('instance1'));
-        static::assertSame($instance2, $otherContainer->get('instance2'));
-        static::assertSame($instance3, $otherContainer->get('instance3'));
-        static::assertSame($instance4, $otherContainer->get('instance4'));
-
-        static::assertSame($addedInstance1, $otherContainer->get('added_instance1'));
-        static::assertSame($addedInstance2, $otherContainer->get('added_instance2'));
-
-        static::assertSame($otherContainer, $otherContainer->get(Container::class));
-        static::assertSame($otherContainer, $otherContainer->get(ContainerInterface::class));
-        static::assertSame($otherContainer, $otherContainer->get('container'));
     }
 
     public function testGetAlias()

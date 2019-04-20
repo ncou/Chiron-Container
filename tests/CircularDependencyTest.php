@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 class CircularDependencyTest extends TestCase
 {
     /**
-     * @expectedException Chiron\Container\Exception\DependencyException
+     * @expectedException Chiron\Container\Exception\ContainerException
      * @expectedExceptionMessage Circular dependency detected while trying to resolve entry
      */
     public function testGetByCreateCircularDependency()
@@ -22,15 +22,15 @@ class CircularDependencyTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\DependencyException
+     * @expectedException Chiron\Container\Exception\ContainerException
      * @expectedExceptionMessage Circular dependency detected while trying to resolve entry
      */
     public function testGetByCreateCircularDependencyFromContainer()
     {
         $container = new Container();
 
-        $container->bind(Class1CircularDependency::class);
-        $container->bind(Class2CircularDependency::class);
+        $container->add(Class1CircularDependency::class);
+        $container->add(Class2CircularDependency::class);
 
         $object = $container->get(Class1CircularDependency::class);
 
@@ -38,7 +38,7 @@ class CircularDependencyTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\DependencyException
+     * @expectedException Chiron\Container\Exception\ContainerException
      * @expectedExceptionMessage Circular dependency detected while trying to resolve entry
      */
     public function testBuildToCreateCircularDependency()
@@ -50,15 +50,15 @@ class CircularDependencyTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\DependencyException
+     * @expectedException Chiron\Container\Exception\ContainerException
      * @expectedExceptionMessage Circular dependency detected while trying to resolve entry
      */
     public function testBuildToCreateCircularDependencyFromContainer()
     {
         $container = new Container();
 
-        $container->bind(Class1CircularDependency::class);
-        $container->bind(Class2CircularDependency::class);
+        $container->add(Class1CircularDependency::class);
+        $container->add(Class2CircularDependency::class);
 
         $object = $container->build(Class1CircularDependency::class);
 
@@ -66,15 +66,15 @@ class CircularDependencyTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\DependencyException
+     * @expectedException Chiron\Container\Exception\ContainerException
      * @expectedExceptionMessage Circular dependency detected while trying to resolve entry
      */
     public function testGetByCreateCircularDependencyFromClosure()
     {
         $container = new Container();
 
-        $container->bind(Class1CircularDependency::class);
-        $container->bind(Class2CircularDependency::class);
+        $container->add(Class1CircularDependency::class);
+        $container->add(Class2CircularDependency::class);
 
         $callable = function (Class1CircularDependency $class) {
             return $class;
@@ -86,21 +86,21 @@ class CircularDependencyTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\DependencyException
+     * @expectedException Chiron\Container\Exception\ContainerException
      * @expectedExceptionMessage Circular dependency detected while trying to resolve entry
      */
     public function testGetByCreateCircularDependencyFromClosureInContainer()
     {
         $container = new Container();
 
-        $container->bind(Class1CircularDependency::class);
-        $container->bind(Class2CircularDependency::class);
+        $container->add(Class1CircularDependency::class);
+        $container->add(Class2CircularDependency::class);
 
         $callable = function (Class1CircularDependency $class) {
             return $class;
         };
 
-        $container->closure('circular', $callable);
+        $container->add('circular', $callable);
 
         $object = $container->get('circular');
 

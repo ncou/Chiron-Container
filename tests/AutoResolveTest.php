@@ -9,11 +9,11 @@ use PHPUnit\Framework\TestCase;
 
 class AutoResolveTest extends TestCase
 {
-    public function testBind()
+    public function testBinding()
     {
         $container = new Container();
 
-        $container->bind(AutoResolveTestSimpleInterface::class, AutoResolveTestSimple::class);
+        $container->share(AutoResolveTestSimpleInterface::class, AutoResolveTestSimple::class);
 
         $instance1 = $container->get(AutoResolveTestSimple::class);
         $instance2 = $container->get(AutoResolveTestSimpleInterface::class);
@@ -34,8 +34,8 @@ class AutoResolveTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\CannotResolveException
-     * @expectedExceptionMessage cannot resolve the "unknown" parameter
+     * @expectedException Chiron\Container\Exception\ContainerException
+     * @expectedExceptionMessage Parameter 'unknown' cannot be resolved
      */
     public function testResolveExceptionForDependency()
     {
@@ -45,8 +45,8 @@ class AutoResolveTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\CannotResolveException
-     * @expectedExceptionMessage cannot resolve the "unknown" parameter
+     * @expectedException Chiron\Container\Exception\ContainerException
+     * @expectedExceptionMessage Parameter 'unknown' cannot be resolved
      */
     public function testResolveExceptionForClass()
     {
