@@ -11,33 +11,38 @@ interface DefinitionInterface
      *
      * @param string $id
      */
-    public function setAlias(string $id) : DefinitionInterface;
+    public function setAlias(string $id): DefinitionInterface;
+
     /**
      * Get the alias of the definition.
      *
      * @return string
      */
-    public function getAlias() : string;
+    public function getAlias(): string;
+
     /**
      * Set whether this is a shared definition.
      *
-     * @param boolean $shared
+     * @param bool $shared
      *
      * @return self
      */
-    public function setShared(bool $shared) : DefinitionInterface;
+    public function setShared(bool $shared): DefinitionInterface;
+
     /**
      * Is this a shared definition?
      *
-     * @return boolean
+     * @return bool
      */
-    public function isShared() : bool;
+    public function isShared(): bool;
+
     /**
      * Get the concrete of the definition.
      *
      * @return mixed
      */
     public function getConcrete();
+
     /**
      * Set the concrete of the definition.
      *
@@ -45,7 +50,8 @@ interface DefinitionInterface
      *
      * @return DefinitionInterface
      */
-    public function setConcrete($concrete) : DefinitionInterface;
+    public function setConcrete($concrete): DefinitionInterface;
+
     /**
      * Add an argument to be injected.
      *
@@ -53,7 +59,8 @@ interface DefinitionInterface
      *
      * @return self
      */
-    public function addArgument($arg) : DefinitionInterface;
+    public function addArgument($arg): DefinitionInterface;
+
     /**
      * Add multiple arguments to be injected.
      *
@@ -61,7 +68,5 @@ interface DefinitionInterface
      *
      * @return self
      */
-    public function addArguments(array $args) : DefinitionInterface;
-
-
+    public function addArguments(array $args): DefinitionInterface;
 }

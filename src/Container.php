@@ -4,29 +4,10 @@ declare(strict_types=1);
 
 namespace Chiron\Container;
 
-
-use Chiron\Container\Exception\CannotChangeException;
-use Chiron\Container\Exception\CannotFindParameterException;
-use Chiron\Container\Exception\CannotResolveException;
-use Chiron\Container\Exception\DependencyException;
-use Chiron\Container\Exception\NullReferenceException;
-
+use ArrayAccess;
 use Chiron\Container\Exception\ContainerException;
-use Chiron\Container\Exception\EntityNotFoundException;
-
-use Chiron\Container\Reflection\ReflectionCallable;
 use Closure;
 use InvalidArgumentException;
-use LogicException;
-
-use Psr\Container\ContainerInterface as PsrContainerInterface;
-use Psr\Container\ContainerExceptionInterface;
-
-use ReflectionClass;
-use ReflectionException;
-use ReflectionFunctionAbstract;
-use Generator;
-use ArrayAccess;
 
 // TODO : créer une méthode singleton() ou share() => https://github.com/illuminate/container/blob/master/Container.php#L354
 // https://github.com/thephpleague/container/blob/master/src/Container.php#L92
@@ -36,7 +17,6 @@ use ArrayAccess;
 
 class Container extends ContainerAbstract implements ArrayAccess
 {
-
     /**
      * Wrap the given closure such that its dependencies will be injected when executed.
      *
@@ -70,8 +50,6 @@ class Container extends ContainerAbstract implements ArrayAccess
         };
     }
 
-
-
     /*
     // TODO : regarder si on peut utiliser cette méthode pour tester le has() !!!!
         public function has($name): bool
@@ -104,8 +82,6 @@ class Container extends ContainerAbstract implements ArrayAccess
     {
         return $this->bound($id);
     }*/
-
-
 
     /**
      * {@inheritdoc}
@@ -162,7 +138,6 @@ class Container extends ContainerAbstract implements ArrayAccess
         );
     }*/
 
-
     /**
      * {@inheritdoc}
      */
@@ -175,7 +150,6 @@ class Container extends ContainerAbstract implements ArrayAccess
     {
         return $this->resolver->build($className, $arguments);
     }
-
 
     /**
      * Call the given Closure / class@method and inject its dependencies.
@@ -205,7 +179,6 @@ class Container extends ContainerAbstract implements ArrayAccess
                 is_array($callback) || is_object($callback) || is_null($callback) ? json_encode($callback) : $callback
             ));
         }
-
 
         return $this->resolver->call($callback, $parameters);
     }
@@ -279,6 +252,4 @@ class Container extends ContainerAbstract implements ArrayAccess
     {
         $this->destroy($name);
     }
-
-
 }

@@ -5,30 +5,20 @@ declare(strict_types=1);
 namespace Chiron\Container;
 
 use Chiron\Container\Annotations\Alias;
-use Chiron\Container\Annotations\Factory;
-use Chiron\Container\Exception\CannotChangeException;
 use Chiron\Container\Exception\CannotFindParameterException;
 use Chiron\Container\Exception\CannotResolveException;
-use Chiron\Container\Exception\DependencyException;
-use Chiron\Container\Exception\NullReferenceException;
-
 use Chiron\Container\Exception\ContainerException;
 use Chiron\Container\Exception\EntityNotFoundException;
-use Psr\Container\ContainerExceptionInterface;
-
-
 use Chiron\Container\Reflection\ReflectionCallable;
 use Closure;
 use InvalidArgumentException;
-use LogicException;
 use Psr\Container\ContainerInterface;
 use ReflectionClass;
+use ReflectionException;
 use ReflectionFunction;
+use ReflectionFunctionAbstract;
 use ReflectionMethod;
 use ReflectionObject;
-use ReflectionException;
-use ReflectionFunctionAbstract;
-
 
 // https://github.com/thephpleague/container/blob/master/src/Container.php#L92
 //https://github.com/mrferos/di/blob/master/src/Container.php#L99
@@ -73,12 +63,11 @@ class ReflectionResolver
     // TODO : ajouter la signature dans l'interface
     // TODO : regarder aussi ici : https://github.com/mrferos/di/blob/master/src/Definition/AbstractDefinition.php#L75
     // TODO : regarder ici pour utiliser le arobase @    https://github.com/slince/di/blob/master/DefinitionResolver.php#L210
-    public function resolveArguments(array $arguments) : array
+    public function resolveArguments(array $arguments): array
     {
         foreach ($arguments as &$arg) {
-
             if (! is_string($arg)) {
-                 continue;
+                continue;
             }
 
             //if (! is_null($this->container) && $this->container->has($arg)) {
@@ -92,11 +81,6 @@ class ReflectionResolver
         return $arguments;
     }
 
-
-
-    /**
-     * {@inheritdoc}
-     */
     // TODO : améliorer le code regarder ici   =>   https://github.com/illuminate/container/blob/master/Container.php#L778
     // TODO : améliorer le code et regarder ici => https://github.com/thephpleague/container/blob/68c148e932ef9959af371590940b4217549b5b65/src/Definition/Definition.php#L225
     // TODO : attention on ne gére pas les alias, alors que cela pourrait servir si on veut builder une classe en utilisant l'alias qui est présent dans le container. Réfléchir si ce cas peut arriver.
@@ -127,7 +111,6 @@ class ReflectionResolver
             return new $className(...$arguments);
         }
 
-
         unset($this->entriesBeingResolved[$className]);
 
         //$reflection->newInstanceArgs($resolved);
@@ -155,9 +138,6 @@ class ReflectionResolver
         return $class;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     // TODO : regarder ici le code qui permet d'executer aussi les callables ajoutés dans le container   => https://github.com/mrferos/di/blob/master/src/Container.php#L173
     // grosso modo le typehint de $callee peut être une string présente dans le tableau des closure =>  $this->closure[$calleeName]
     // TODO : méthode à virer !!!!
@@ -174,32 +154,31 @@ class ReflectionResolver
         }
     }*/
 
-/*
-    public function call2($callback, array $parameters = [], ?string $defaultMethod = null)
-    {
-        if ($this->isCallableWithAtSign($callback) || $defaultMethod) {
-            return $this->callClass($callback, $parameters, $defaultMethod);
+    /*
+        public function call2($callback, array $parameters = [], ?string $defaultMethod = null)
+        {
+            if ($this->isCallableWithAtSign($callback) || $defaultMethod) {
+                return $this->callClass($callback, $parameters, $defaultMethod);
+            }
+    
+    
+            if (! is_callable($callback)) {
+                throw new InvalidArgumentException(sprintf(
+                    '(%s) is not resolvable.',
+                    is_array($callback) || is_object($callback) || is_null($callback) ? json_encode($callback) : $callback
+                ));
+            }
+    
+            try {
+                return call_user_func_array(
+                    $callback,
+                    $this->getParameters(new ReflectionCallable($callback), $parameters)
+                );
+            } catch (CannotFindParameterException $e) {
+                throw new CannotResolveException($callback, $e->getParameter());
+            }
         }
-
-
-        if (! is_callable($callback)) {
-            throw new InvalidArgumentException(sprintf(
-                '(%s) is not resolvable.',
-                is_array($callback) || is_object($callback) || is_null($callback) ? json_encode($callback) : $callback
-            ));
-        }
-
-        try {
-            return call_user_func_array(
-                $callback,
-                $this->getParameters(new ReflectionCallable($callback), $parameters)
-            );
-        } catch (CannotFindParameterException $e) {
-            throw new CannotResolveException($callback, $e->getParameter());
-        }
-    }
-*/
-
+    */
 
     /**
      * Invoke a callable and inject its dependencies.
@@ -221,9 +200,8 @@ class ReflectionResolver
             );
     }
 
-    private function reflectCallable(callable $callee) : ReflectionFunctionAbstract
+    private function reflectCallable(callable $callee): ReflectionFunctionAbstract
     {
-
         // closure, or function name,
         if ($callee instanceof Closure) {
             return new ReflectionFunction($callee);
@@ -252,34 +230,32 @@ class ReflectionResolver
         return $reflection->getMethod('__callStatic');
     }
 
-/*
-    public function call_save(callable $callable, array $args = [])
-    {
-
-        if (is_string($callable) && strpos($callable, '::') !== false) {
-            $callable = explode('::', $callable);
-        }
-        if (is_array($callable)) {
-            if (is_string($callable[0])) {
-                $callable[0] = $this->container->get($callable[0]);
+    /*
+        public function call_save(callable $callable, array $args = [])
+        {
+    
+            if (is_string($callable) && strpos($callable, '::') !== false) {
+                $callable = explode('::', $callable);
             }
-            $reflection = new ReflectionMethod($callable[0], $callable[1]);
-            if ($reflection->isStatic()) {
-                $callable[0] = null;
+            if (is_array($callable)) {
+                if (is_string($callable[0])) {
+                    $callable[0] = $this->container->get($callable[0]);
+                }
+                $reflection = new ReflectionMethod($callable[0], $callable[1]);
+                if ($reflection->isStatic()) {
+                    $callable[0] = null;
+                }
+                return $reflection->invokeArgs($callable[0], $this->getParameters($reflection, $args));
             }
-            return $reflection->invokeArgs($callable[0], $this->getParameters($reflection, $args));
+            if (is_object($callable)) {
+                $reflection = new ReflectionMethod($callable, '__invoke');
+                return $reflection->invokeArgs($callable, $this->getParameters($reflection, $args));
+            }
+            $reflection = new ReflectionFunction($callable);
+    
+            return $reflection->invokeArgs($this->getParameters($reflection, $args));
         }
-        if (is_object($callable)) {
-            $reflection = new ReflectionMethod($callable, '__invoke');
-            return $reflection->invokeArgs($callable, $this->getParameters($reflection, $args));
-        }
-        $reflection = new ReflectionFunction($callable);
-
-        return $reflection->invokeArgs($this->getParameters($reflection, $args));
-    }
-*/
-
-
+    */
 
     /**
      * @param \ReflectionFunctionAbstract $reflection

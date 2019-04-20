@@ -32,13 +32,13 @@ interface ContainerInterface extends PsrContainerInterface
     /**
      * Add an item to the container.
      *
-     * @param string  $id
-     * @param mixed   $concrete
-     * @param boolean $shared
+     * @param string $id
+     * @param mixed  $concrete
+     * @param bool   $shared
      *
      * @return \League\Container\Definition\DefinitionInterface
      */
-    public function add(string $id, $concrete = null, bool $shared = null) : DefinitionInterface;
+    public function add(string $id, $concrete = null, bool $shared = null): DefinitionInterface;
 
     /**
      * @param string $alias
@@ -53,14 +53,14 @@ interface ContainerInterface extends PsrContainerInterface
      */
     public function getDefinition(string $name): DefinitionInterface;
 
-    /**
+    /*
      * @param array $arguments
      *
      * @return \Wandu\DI\ContainerInterface
      */
     //public function with(array $arguments = []): ContainerInterface;
 
-    /**
+    /*
      * @param string $className
      * @param array  $arguments
      *
@@ -68,7 +68,7 @@ interface ContainerInterface extends PsrContainerInterface
      */
     //public function build(string $className, array $arguments = []);
 
-    /**
+    /*
      * @param callable $callee
      * @param array    $arguments
      *
@@ -76,7 +76,7 @@ interface ContainerInterface extends PsrContainerInterface
      */
     //public function call(callable $callee, array $arguments = []);
 
-    /**
+    /*
      * Call the given Closure / class@method and inject its dependencies.
      *
      * @param callable|string $callback

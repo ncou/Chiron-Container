@@ -42,18 +42,18 @@ class CallAdvancedTest extends TestCase
         $this->assertEquals('taylor', $result[1]);
     }
 
-/*
-// TODO : regarder si ce test que tu as rajouté est utile !!!!
-    public function testClosureCallWithInjectedDependency()
-    {
-        $container = new Container();
-        $result = $container->call(function (ContainerConcreteStub $stub) {
-        }, ['foo' => 'bar']);
-
-        $result = $container->call(function (ContainerConcreteStub $stub) {
-        }, ['foo' => 'bar', 'stub' => new ContainerConcreteStub()]);
-    }
-*/
+    /*
+    // TODO : regarder si ce test que tu as rajouté est utile !!!!
+        public function testClosureCallWithInjectedDependency()
+        {
+            $container = new Container();
+            $result = $container->call(function (ContainerConcreteStub $stub) {
+            }, ['foo' => 'bar']);
+    
+            $result = $container->call(function (ContainerConcreteStub $stub) {
+            }, ['foo' => 'bar', 'stub' => new ContainerConcreteStub()]);
+        }
+    */
 
     public function testCallWithCallableArray()
     {

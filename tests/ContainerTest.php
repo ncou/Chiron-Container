@@ -4,23 +4,22 @@ declare(strict_types=1);
 
 namespace Chiron\Tests\Container;
 
-use ArrayObject;
 use Chiron\Container\Container;
 use Chiron\Container\ContainerInterface;
 use PHPUnit\Framework\TestCase;
 
 class ContainerTest extends TestCase
 {
-/*
-    public function testConstruct()
-    {
-        $container = new Container();
-
-        static::assertSame($container, $container->get('container'));
-        static::assertSame($container, $container->get(Container::class));
-        static::assertSame($container, $container->get(ContainerInterface::class));
-    }
-*/
+    /*
+        public function testConstruct()
+        {
+            $container = new Container();
+    
+            static::assertSame($container, $container->get('container'));
+            static::assertSame($container, $container->get(Container::class));
+            static::assertSame($container, $container->get(ContainerInterface::class));
+        }
+    */
     public function testHas()
     {
         $container = new Container();
@@ -54,28 +53,28 @@ class ContainerTest extends TestCase
         static::assertFalse(isset($container['undefined']));
     }
 
-/*
-    public function testInstance()
-    {
-        $container = new Container();
-        $xml = new ContainerTestXmlRenderer();
-
-        $container->instance('xml', $xml);
-        $container->instance('is_debug', true);
-
-        static::assertSame($xml, $container->get('xml'));
-        static::assertSame(true, $container->get('is_debug'));
-
-        // "get" map to offsetGet
-        static::assertSame($xml, $container['xml']);
-        static::assertSame(true, $container['is_debug']);
-    }
-*/
+    /*
+        public function testInstance()
+        {
+            $container = new Container();
+            $xml = new ContainerTestXmlRenderer();
+    
+            $container->instance('xml', $xml);
+            $container->instance('is_debug', true);
+    
+            static::assertSame($xml, $container->get('xml'));
+            static::assertSame(true, $container->get('is_debug'));
+    
+            // "get" map to offsetGet
+            static::assertSame($xml, $container['xml']);
+            static::assertSame(true, $container['is_debug']);
+        }
+    */
 
     public function testClosure()
     {
         $container = new Container();
-        $container->add(ContainerInterface::class,$container);
+        $container->add(ContainerInterface::class, $container);
 
         $container->add(ContainerTestRenderable::class, $renderer = new ContainerTestXmlRenderer());
         $container->share(ContainerTestHttpController::class, function (ContainerInterface $app) {
