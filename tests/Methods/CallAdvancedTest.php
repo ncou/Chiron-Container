@@ -49,7 +49,7 @@ class CallAdvancedTest extends TestCase
             $container = new Container();
             $result = $container->call(function (ContainerConcreteStub $stub) {
             }, ['foo' => 'bar']);
-    
+
             $result = $container->call(function (ContainerConcreteStub $stub) {
             }, ['foo' => 'bar', 'stub' => new ContainerConcreteStub()]);
         }
