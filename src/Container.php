@@ -26,7 +26,7 @@ class Container extends ContainerAbstract implements ArrayAccess
      * @return \Closure
      */
     // https://github.com/illuminate/container/blob/master/Container.php#L556
-    // TODO : le paramétre $callback ne devrait pas plutot être du type callable au lieu de Closure ?????
+    // TODO : le paramétre $callback ne devrait pas plutot être du type callable au lieu de Closure ????? / voir même de type string car le call support les string avec le signe @
     public function wrap(Closure $closure, array $parameters = []): Closure
     {
         return function () use ($closure, $parameters) {

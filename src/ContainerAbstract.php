@@ -102,9 +102,7 @@ class ContainerAbstract implements ContainerInterface
             $this->add($id);
         }
 
-        return isset($this->definitions[$id]) ||
-                isset($this->services[$id]) ||
-                $this->isAlias($id);
+        return isset($this->definitions[$id]) || isset($this->services[$id]) || $this->isAlias($id);
     }
 
     /*
@@ -302,13 +300,12 @@ class ContainerAbstract implements ContainerInterface
     /**
      * {@inheritdoc}
      */
-    // TODO : méthode à virer
     public function getDefinition(string $name): DefinitionInterface
     {
         $name = $this->getAlias($name);
 
         if (! array_key_exists($name, $this->definitions)) {
-            throw new InvalidArgumentException($name);
+            throw new EntityNotFoundException("Service '$name' is not managed as a definition in the container");
         }
 
         return $this->definitions[$name];
