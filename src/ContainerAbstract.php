@@ -7,7 +7,6 @@ namespace Chiron\Container;
 use Chiron\Container\Exception\ContainerException;
 use Chiron\Container\Exception\EntityNotFoundException;
 use Closure;
-use InvalidArgumentException;
 use Psr\Container\ContainerExceptionInterface;
 
 // TODO : créer une méthode singleton() ou share() => https://github.com/illuminate/container/blob/master/Container.php#L354
