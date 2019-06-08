@@ -8,6 +8,7 @@ use ArrayAccess;
 use Chiron\Container\Exception\ContainerException;
 use Closure;
 use InvalidArgumentException;
+use Chiron\Container\ServiceProvider\ServiceProviderInterface;
 
 // TODO : créer une méthode singleton() ou share() => https://github.com/illuminate/container/blob/master/Container.php#L354
 // https://github.com/thephpleague/container/blob/master/src/Container.php#L92
@@ -15,8 +16,32 @@ use InvalidArgumentException;
 
 // TODO : améliorer le Circular exception avec le code : https://github.com/symfony/dependency-injection/blob/master/Container.php#L236
 
-class Container extends ContainerAbstract implements ArrayAccess
+class Container extends ReflectionContainer implements ArrayAccess
 {
+    /**
+     * The current globally available kernel (if any).
+     *
+     * @var static
+     */
+    protected static $instance;
+    /**
+     * Indicates if the kernel has "booted".
+     *
+     * @var bool
+     */
+    protected $isBooted = false;
+
+    /**
+     * All of the registered service providers.
+     *
+     * @var array
+     */
+    protected $serviceProviders = [];
+
+    /*******************************************************************************
+     * Helpers
+     ******************************************************************************/
+
     /**
      * Wrap the given closure such that its dependencies will be injected when executed.
      *
@@ -138,6 +163,10 @@ class Container extends ContainerAbstract implements ArrayAccess
         );
     }*/
 
+    /*******************************************************************************
+     * Build() new class or Call() callable
+     ******************************************************************************/
+
     /**
      * {@inheritdoc}
      */
@@ -220,6 +249,139 @@ class Container extends ContainerAbstract implements ArrayAccess
     {
         return is_string($callback) && strpos($callback, '@') !== false;
     }
+
+    /*******************************************************************************
+     * Service Provider
+     ******************************************************************************/
+
+    /**
+     * Register a service provider with the application.
+     *
+     * @param ServiceProviderInterface|string $provider
+     *
+     * @return self
+     */
+    public function register($provider): self
+    {
+        $provider = $this->resolveProvider($provider);
+
+        // don't process the service if it's already registered
+        if (! $this->isProviderRegistered($provider)) {
+            $this->registerProvider($provider);
+
+            // If the application has already booted, we will call this boot method on
+            // the provider class so it has an opportunity to do its boot logic and
+            // will be ready for any usage by this developer's application logic.
+            if ($this->isBooted) {
+                $this->bootProvider($provider);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Register a service provider with the application.
+     *
+     * @param ServiceProviderInterface|string $provider
+     *
+     * @return ServiceProviderInterface
+     */
+    protected function resolveProvider($provider): ServiceProviderInterface
+    {
+        // If the given "provider" is a string, we will resolve it.
+        // This is simply a more convenient way of specifying your service provider classes.
+        if (is_string($provider) && class_exists($provider)) {
+            $provider = new $provider();
+        }
+
+        // TODO : voir si on garder ce throw car de toute facon le typehint va lever une exception.
+        if (! $provider instanceof ServiceProviderInterface) {
+            throw new InvalidArgumentException(
+                sprintf('The provider must be an instance of "%s" or a valid class name.',
+                    ServiceProviderInterface::class)
+            );
+        }
+
+        return $provider;
+    }
+
+    protected function isProviderRegistered(ServiceProviderInterface $provider): bool
+    {
+        // is service already present in the array ? if it's the case, it's already registered.
+        return array_key_exists(get_class($provider), $this->serviceProviders);
+    }
+
+    protected function registerProvider(ServiceProviderInterface $provider): void
+    {
+        $provider->register($this);
+        // store the registered service
+        $this->serviceProviders[get_class($provider)] = $provider;
+    }
+
+    /**
+     * Boot the application's service providers.
+     */
+    public function boot(): self
+    {
+        if (! $this->isBooted) {
+            foreach ($this->serviceProviders as $provider) {
+                $this->bootProvider($provider);
+            }
+            $this->isBooted = true;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Boot the given service provider.
+     *
+     * @param \Illuminate\Support\ServiceProvider $provider
+     *
+     * @return mixed
+     */
+    protected function bootProvider(ServiceProviderInterface $provider): void
+    {
+        if (method_exists($provider, 'boot')) {
+            $this->call([$provider, 'boot']);
+        }
+    }
+
+    /*******************************************************************************
+     * Singleton
+     ******************************************************************************/
+
+    /**
+     * Set the globally available instance of the container.
+     *
+     * @return \Chiron\Container\Container|static
+     */
+    public static function getInstance(): Container
+    {
+        if (is_null(static::$instance)) {
+            static::$instance = new static();
+        }
+
+        return static::$instance;
+    }
+
+    /**
+     * Set the shared instance of the container.
+     *
+     * @param \Chiron\Container\Container|null $container
+     *
+     * @return \Chiron\Container\Container|static
+     */
+    public static function setInstance(Container $container = null)
+    {
+        // TODO : forcer le type de retour dans la signature de la méthode, et vérifier ce qui se passe si on ne passe rien si le "null" est retourné par cette méthode.
+        return static::$instance = $container;
+    }
+
+    /*******************************************************************************
+     * Array Access
+     ******************************************************************************/
 
     /**
      * {@inheritdoc}

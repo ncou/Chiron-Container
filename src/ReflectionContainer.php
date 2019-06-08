@@ -15,7 +15,7 @@ use Psr\Container\ContainerExceptionInterface;
 
 // TODO : améliorer le Circular exception avec le code : https://github.com/symfony/dependency-injection/blob/master/Container.php#L236
 
-class ContainerAbstract implements ContainerInterface
+class ReflectionContainer implements ContainerInterface
 {
     /**
      * @var bool
