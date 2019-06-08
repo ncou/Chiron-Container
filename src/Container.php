@@ -38,6 +38,15 @@ class Container extends ReflectionContainer implements ArrayAccess
      */
     protected $serviceProviders = [];
 
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        // TODO : attention si on utilise ce bout de code, il faudra aussi faire une méthode __clone() qui remodifie ces valeurs d'instances. => https://github.com/Wandu/Framework/blob/master/src/Wandu/DI/Container.php#L65
+        $this->share(Container::class, $this);
+    }
+
     /*******************************************************************************
      * Helpers
      ******************************************************************************/
