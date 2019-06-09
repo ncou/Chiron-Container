@@ -16,6 +16,8 @@ use Chiron\Container\ServiceProvider\ServiceProviderInterface;
 
 // TODO : améliorer le Circular exception avec le code : https://github.com/symfony/dependency-injection/blob/master/Container.php#L236
 
+//TODO : Classe de TESTS pour les méthode register : https://github.com/laravel/framework/blob/master/tests/Foundation/FoundationApplicationTest.php
+
 class Container extends ReflectionContainer implements ArrayAccess
 {
     /**
@@ -270,6 +272,7 @@ class Container extends ReflectionContainer implements ArrayAccess
      *
      * @return self
      */
+    // TODO : améliorer le code : https://github.com/laravel/framework/blob/5.8/src/Illuminate/Foundation/Application.php#L594
     public function register($provider): self
     {
         $provider = $this->resolveProvider($provider);
