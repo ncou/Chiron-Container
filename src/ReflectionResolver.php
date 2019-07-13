@@ -23,6 +23,8 @@ use ReflectionObject;
 // https://github.com/thephpleague/container/blob/master/src/Container.php#L92
 //https://github.com/mrferos/di/blob/master/src/Container.php#L99
 
+// TODO : vérifier le type de la variable qui est trouvée lorsqu'on résout les arguments/parameters : https://github.com/spiral/core/blob/0ee9848f04b45d09dbea18fa05a0bbda35f3401b/src/Container.php#L610
+
 // TODO : améliorer le Circular exception avec le code : https://github.com/symfony/dependency-injection/blob/master/Container.php#L236
 
 // TODO : classe à renommer en DefinitionResolver
