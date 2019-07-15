@@ -32,22 +32,19 @@ class ReflectionContainer implements ContainerInterface
     protected $services = [];
 
     /** @var array */
+    // TODO : à virer
     protected $classes = [];
 
     /** @var array */
+    // TODO : à virer
     protected $closures = [];
 
     /** @var array */
     protected $aliases = [];
 
+    /** @var ReflectionResolver */
     protected $resolver;
 
-    /**
-     * Array of entries being resolved. Used to avoid circular dependencies and infinite loops.
-     *
-     * @var array
-     */
-    protected $entriesBeingResolved = [];
 
     public function __construct()
     {
