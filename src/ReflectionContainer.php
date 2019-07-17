@@ -28,16 +28,11 @@ class ReflectionContainer implements ContainerInterface
     /** @var \Chiron\Container\Definition[] */
     protected $definitions = [];
 
+    /** @var \Chiron\Container\Inflector[] */
+    protected $inflectors = [];
+
     /** @var array */
     protected $services = [];
-
-    /** @var array */
-    // TODO : à virer
-    protected $classes = [];
-
-    /** @var array */
-    // TODO : à virer
-    protected $closures = [];
 
     /** @var array */
     protected $aliases = [];
@@ -92,6 +87,8 @@ class ReflectionContainer implements ContainerInterface
         return false;
     }*/
 
+    // TODO : améliorer le code, à quoi sert la vérification dans $this->services car si il existe une instance partagée dans ce tableau, elle est forcément présente dans le tableau précédent $this->definitions.
+    // TODO : vérifier si l'ajout de la classe via $this->add() est vraiment nécessaire !!!!
     public function has($id)
     {
         if (! isset($this->definitions[$id]) && class_exists($id)) {
@@ -132,80 +129,6 @@ class ReflectionContainer implements ContainerInterface
     public function has($id)
     {
         return $this->bound($id);
-    }*/
-
-    /**
-     * {@inheritdoc}
-     */
-    // TODO : à renommer en remove() ????
-    // TODO : réfléchir si on conserve cette méthode
-
-    public function destroy(...$names)
-    {
-        foreach ($names as $name) {
-            unset(
-                $this->definitions[$name],
-                $this->services[$name],
-                $this->classes[$name],
-                $this->closures[$name]
-                // TODO : il faudrait aussi supprimer l'alias !!!!!
-            );
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    // TODO : à virer c'est déprecated !!!!
-    /*
-    public function instance(string $name, $value): DefinitionInterface
-    {
-        $this->destroy($name);
-        $this->instances[$name] = $value;
-
-        return $this->definitions[$name] = new Definition($name, $value);
-        //return $this->definitions[] = new Definition($name);
-    }*/
-
-    // TODO : renommer en invokable()
-    /*
-    public function closure(string $name, callable $handler): DefinitionInterface
-    {
-        return $this->bind($name, $handler);
-    }*/
-
-    /**
-     * {@inheritdoc}
-     */
-    // TODO : lui passer un 3 eme paramétre pour savoir si c'est du shared ou non + créer une méthode share() => https://github.com/thephpleague/container/blob/master/src/Container.php#L92
-    /*
-    public function bind2(string $name, $className = null): DefinitionInterface
-    {
-        if (! isset($className)) {
-            $this->destroy($name);
-            $this->classes[$name] = $name;
-
-            return $this->definitions[$name] = new Definition($name, $name);
-            //return $this->definitions[] = new Definition($name);
-        }
-        if (is_string($className) && class_exists($className)) {
-            $this->destroy($name, $className);
-            $this->classes[$className] = $className;
-            $this->alias($name, $className);
-
-            return $this->definitions[$className] = new Definition($className, $className);
-            //return $this->definitions[] = new Definition($className);
-        } elseif (is_callable($className)) {
-            $this->destroy($name);
-            $this->closures[$name] = $className;
-
-            return $this->definitions[$name] = new Definition($name, $className);
-            //return $this->definitions[] = new Definition($name);
-        }
-
-        throw new ContainerException(
-            sprintf('Argument 2 must be class name or Closure, "%s" given', is_object($className) ? get_class($className) : gettype($className))
-        );
     }*/
 
     /**
@@ -308,6 +231,19 @@ class ReflectionContainer implements ContainerInterface
     }
 
     /**
+     * Allows for manipulation of specific types on resolution.
+     *
+     * @param string        $type reprsent the class name
+     * @param callable $callback
+     *
+     * @return InflectorInterface
+     */
+    public function inflector(string $type, callable $callback) : InflectorInterface
+    {
+        return $this->inflectors[] = new Inflector($type, $callback);
+    }
+
+    /**
      * @param string $name
      *
      * @return mixed|object
@@ -317,10 +253,10 @@ class ReflectionContainer implements ContainerInterface
         // resolve alias
         $name = $this->getAlias($name);
 
-        // TODO : il faudrait aussi vérifier si $new est à false avant de rentrer dans ce test. non ????
-        if (array_key_exists($name, $this->services)) {
+        if (array_key_exists($name, $this->services) && $new === false) {
             return $this->services[$name];
         }
+
         if (! array_key_exists($name, $this->definitions)) {
             if (! class_exists($name)) {
                 throw new EntityNotFoundException("Service '$name' wasn't found in the dependency injection container");
@@ -331,23 +267,38 @@ class ReflectionContainer implements ContainerInterface
         $definition = $this->definitions[$name];
         //$definition = $this->getDefinition($name);
 
-        $instance = $this->resolver->resolve($definition->getConcrete(), $definition->getAssigns());
+        $resolved = $this->resolver->resolve($definition->getConcrete(), $definition->getAssigns());
         //$instance = $this->resolver->resolve($definition->getConcrete(), $this->convertAssign($definition->assigns));
 
-        /*
-        if (array_key_exists($name, $this->classes)) {
-            //$instance = $this->resolver->build($this->classes[$name], $this->resolveArguments($definition->assigns));
-            $instance = $this->resolver->resolve($this->classes[$name], $definition->assigns);
-        } elseif (array_key_exists($name, $this->closures)) {
-            //$instance = $this->resolver->call($this->closures[$name], $this->resolveArguments($definition->assigns));
-            $instance = $this->resolver->resolve($this->closures[$name], $definition->assigns);
-        }*/
+        $resolved = $this->inflect($resolved);
 
         if ($definition->isShared() && $new === false) {
-            $this->services[$name] = $instance;
+            $this->services[$name] = $resolved;
         }
 
-        return $instance;
+        return $resolved;
+    }
+
+    /**
+     * Apply inflections to an object.
+     *
+     * @param object $object
+     *
+     * @return object
+     */
+    protected function inflect($object)
+    {
+        foreach ($this->inflectors as $inflector) {
+            $type = $inflector->getType();
+
+            if (! $object instanceof $type) {
+                continue;
+            }
+
+            call_user_func($inflector->getCallback(), $object);
+        }
+
+        return $object;
     }
 
     // TODO : méthode à virer !!!!

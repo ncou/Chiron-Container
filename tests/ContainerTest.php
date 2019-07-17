@@ -163,6 +163,50 @@ class ContainerTest extends TestCase
         static::assertInstanceOf(ContainerTestJsonRenderer::class, $controller);
     }
 
+    public function testInflect()
+    {
+        $container = new Container();
+
+        $container->inflector(Bar::class,
+            function(Bar $object) {
+                $object->setValue("foobar");
+
+                // this is to check the instance returned is not used in the container code !!!
+                return new Foo();
+            }
+        );
+
+        $bar = $container->get(Bar::class);
+        static::assertInstanceOf(Bar::class, $bar);
+        static::assertSame($bar->getValue(), "foobar");
+
+        $bar2 = new Bar();
+        static::assertSame($bar2->getValue(), "bar");
+    }
+
+    public function testInflectWithSharedObject()
+    {
+        $container = new Container();
+
+        $container->share(Bar::class);
+
+        $counter = 0;
+        $container->inflector(Bar::class,
+            function(Bar $object) use (&$counter) {
+                $counter++;
+            }
+        );
+
+        $bar = $container->get(Bar::class);
+        static::assertSame($counter, 1);
+
+        $bar = $container->get(Bar::class);
+        static::assertSame($counter, 1);
+
+        $bar = $container->get(Bar::class, true);
+        static::assertSame($counter, 2);
+    }
+
     /**
      * @expectedException Chiron\Container\Exception\EntityNotFoundException
      * @expectedExceptionMessage Service 'unknown' wasn't found in the dependency injection container
@@ -171,35 +215,6 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
         $container->get('unknown');
-    }
-
-    public function testDestroy()
-    {
-        $container = new Container();
-
-        $container->add('xml', new ContainerTestXmlRenderer());
-
-        static::assertTrue($container->has('xml'));
-
-        $container->destroy('xml');
-
-        static::assertFalse($container->has('xml'));
-    }
-
-    public function testDestroyMany()
-    {
-        $container = new Container();
-
-        $container->add('xml1', new ContainerTestXmlRenderer());
-        $container->add('xml2', new ContainerTestXmlRenderer());
-
-        static::assertTrue($container->has('xml1'));
-        static::assertTrue($container->has('xml2'));
-
-        $container->destroy('xml1', 'xml2');
-
-        static::assertFalse($container->has('xml1'));
-        static::assertFalse($container->has('xml2'));
     }
 
     public function testGetAlias()
@@ -257,4 +272,21 @@ class ContainerTestHttpController
 
 class Foo
 {
+}
+
+class Bar
+{
+    private $value = "bar";
+
+
+    public function getValue(): string
+    {
+        return $this->value;
+    }
+
+    public function setValue(string $value): void
+    {
+        $this->value = $value;
+    }
+
 }

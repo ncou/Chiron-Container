@@ -50,6 +50,8 @@ class ReflectionResolver
     {
         $instance = $concrete;
 
+        // TODO : comment ca sez passe si on a mis dans la définition une instance d'une classe qui a une méthode __invoke ???? elle va surement être interprété comme un callable mais ce n'est pas ce qu'on souhaite !!!!
+        // TODO : il faudrait ajouter aussi une vérif soit "différent de object", sinon ajouter un if en début de proécédure dans le cas ou c'est un "scalaire ou objet" on n'essaye pas de résoudre la variable $concrete.
         if (is_callable($concrete)) {
             //$concrete = $this->resolveCallable($concrete);
             $instance = $this->call($concrete, $args);
