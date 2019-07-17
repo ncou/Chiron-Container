@@ -168,8 +168,8 @@ class ContainerTest extends TestCase
         $container = new Container();
 
         $container->inflector(Bar::class,
-            function(Bar $object) {
-                $object->setValue("foobar");
+            function (Bar $object) {
+                $object->setValue('foobar');
 
                 // this is to check the instance returned is not used in the container code !!!
                 return new Foo();
@@ -178,10 +178,10 @@ class ContainerTest extends TestCase
 
         $bar = $container->get(Bar::class);
         static::assertInstanceOf(Bar::class, $bar);
-        static::assertSame($bar->getValue(), "foobar");
+        static::assertSame($bar->getValue(), 'foobar');
 
         $bar2 = new Bar();
-        static::assertSame($bar2->getValue(), "bar");
+        static::assertSame($bar2->getValue(), 'bar');
     }
 
     public function testInflectWithSharedObject()
@@ -192,7 +192,7 @@ class ContainerTest extends TestCase
 
         $counter = 0;
         $container->inflector(Bar::class,
-            function(Bar $object) use (&$counter) {
+            function (Bar $object) use (&$counter) {
                 $counter++;
             }
         );
@@ -276,8 +276,7 @@ class Foo
 
 class Bar
 {
-    private $value = "bar";
-
+    private $value = 'bar';
 
     public function getValue(): string
     {
@@ -288,5 +287,4 @@ class Bar
     {
         $this->value = $value;
     }
-
 }

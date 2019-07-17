@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace Chiron\Container;
 
-use League\Container\Argument\ArgumentResolverTrait;
-
 class Inflector implements InflectorInterface
 {
     /**
      * @var string
      */
     protected $type;
+
     /**
      * @var callable
      */
@@ -20,18 +19,19 @@ class Inflector implements InflectorInterface
     /**
      * Construct.
      *
-     * @param string        $type
+     * @param string   $type
      * @param callable $callback
      */
     public function __construct(string $type, callable $callback)
     {
-        $this->type     = $type;
+        $this->type = $type;
         $this->callback = $callback;
     }
+
     /**
      * {@inheritdoc}
      */
-    public function getType() : string
+    public function getType(): string
     {
         return $this->type;
     }

@@ -6,7 +6,6 @@ namespace Chiron\Container;
 
 use Chiron\Container\Exception\ContainerException;
 use Chiron\Container\Exception\EntityNotFoundException;
-use Closure;
 use Psr\Container\ContainerExceptionInterface;
 
 // TODO : créer une méthode singleton() ou share() => https://github.com/illuminate/container/blob/master/Container.php#L354
@@ -39,7 +38,6 @@ class ReflectionContainer implements ContainerInterface
 
     /** @var ReflectionResolver */
     protected $resolver;
-
 
     public function __construct()
     {
@@ -233,12 +231,12 @@ class ReflectionContainer implements ContainerInterface
     /**
      * Allows for manipulation of specific types on resolution.
      *
-     * @param string        $type reprsent the class name
+     * @param string   $type     reprsent the class name
      * @param callable $callback
      *
      * @return InflectorInterface
      */
-    public function inflector(string $type, callable $callback) : InflectorInterface
+    public function inflector(string $type, callable $callback): InflectorInterface
     {
         return $this->inflectors[] = new Inflector($type, $callback);
     }

@@ -11,7 +11,7 @@ interface InflectorInterface
      *
      * @return string
      */
-    public function getType() : string;
+    public function getType(): string;
 
     /**
      * Get the callback.
