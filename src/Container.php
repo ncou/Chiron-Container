@@ -6,9 +6,9 @@ namespace Chiron\Container;
 
 use ArrayAccess;
 use Chiron\Container\Exception\ContainerException;
+use Chiron\Container\ServiceProvider\ServiceProviderInterface;
 use Closure;
 use InvalidArgumentException;
-use Chiron\Container\ServiceProvider\ServiceProviderInterface;
 
 // TODO : créer une méthode singleton() ou share() => https://github.com/illuminate/container/blob/master/Container.php#L354
 // https://github.com/thephpleague/container/blob/master/src/Container.php#L92
@@ -26,6 +26,7 @@ class Container extends ReflectionContainer implements ArrayAccess
      * @var static
      */
     protected static $instance;
+
     /**
      * Indicates if the kernel has "booted".
      *
@@ -39,7 +40,6 @@ class Container extends ReflectionContainer implements ArrayAccess
      * @var array
      */
     protected $serviceProviders = [];
-
 
     public function __construct()
     {
