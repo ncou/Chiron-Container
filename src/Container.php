@@ -200,8 +200,14 @@ class Container extends ReflectionContainer implements ArrayAccess
      *
      * @return mixed
      */
+    // TODO : améliorer le cas ou on passe uniquement une string sans le @__invoke qui est sous entendu !!! https://github.com/laravel/lumen-framework/blob/1a0855a5187af7bf3db1697cce05242dfb9271ea/src/Concerns/RoutesRequests.php#L305
     public function call($callback, array $parameters = [], ?string $defaultMethod = null)
     {
+        /*
+        if (is_string($callback) && strpos($callback, '@') === false) {
+            $callback .= '@__invoke';
+        }*/
+        
         if ($this->isCallableWithAtSign($callback) || $defaultMethod) {
             return $this->callClass($callback, $parameters, $defaultMethod);
         }
