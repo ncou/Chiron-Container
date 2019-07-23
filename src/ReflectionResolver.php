@@ -27,6 +27,8 @@ use ReflectionObject;
 
 // TODO : améliorer le Circular exception avec le code : https://github.com/symfony/dependency-injection/blob/master/Container.php#L236
 
+//https://github.com/yiisoft/injector/blob/master/src/Injector.php
+
 // TODO : classe à renommer en DefinitionResolver
 class ReflectionResolver
 {
@@ -196,6 +198,7 @@ class ReflectionResolver
      *
      * @return mixed
      */
+    //https://github.com/yiisoft/injector/blob/master/src/Injector.php#L69
     public function call(callable $callable, array $args = [])
     {
         $args = $this->resolveArguments($args);
