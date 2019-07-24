@@ -29,7 +29,9 @@ use ReflectionObject;
 
 //https://github.com/yiisoft/injector/blob/master/src/Injector.php
 
-// TODO : classe à renommer en DefinitionResolver
+//https://github.com/railt/container/blob/1.4.x/src/Container/ParamResolver.php
+
+// TODO : classe à renommer en DefinitionResolver ou en ParamResolver
 class ReflectionResolver
 {
     protected $container;
