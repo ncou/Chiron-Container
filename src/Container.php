@@ -9,6 +9,7 @@ use Chiron\Container\Exception\ContainerException;
 use Chiron\Container\ServiceProvider\ServiceProviderInterface;
 use Closure;
 use InvalidArgumentException;
+use Psr\Container\ContainerInterface;
 
 // TODO : créer une méthode singleton() ou share() => https://github.com/illuminate/container/blob/master/Container.php#L354
 // https://github.com/thephpleague/container/blob/master/src/Container.php#L92
@@ -18,7 +19,7 @@ use InvalidArgumentException;
 
 //TODO : Classe de TESTS pour les méthode register : https://github.com/laravel/framework/blob/master/tests/Foundation/FoundationApplicationTest.php
 
-class Container extends ReflectionContainer implements ArrayAccess
+class Container extends ReflectionContainer implements ArrayAccess, FactoryInterface, InvokerInterface
 {
     /**
      * The current globally available kernel (if any).
@@ -45,8 +46,12 @@ class Container extends ReflectionContainer implements ArrayAccess
     {
         parent::__construct();
 
+        // TODO : ajouter un PHPunit pour vérifier si ces 4 classes sont bien ajoutées à la construction.
         // TODO : attention si on utilise ce bout de code, il faudra aussi faire une méthode __clone() qui remodifie ces valeurs d'instances. => https://github.com/Wandu/Framework/blob/master/src/Wandu/DI/Container.php#L65
         $this->share(Container::class, $this);
+        $this->share(ContainerInterface::class, $this);
+        $this->share(FactoryInterface::class, $this);
+        $this->share(InvokerInterface::class, $this);
     }
 
     /*******************************************************************************
@@ -207,7 +212,7 @@ class Container extends ReflectionContainer implements ArrayAccess
         if (is_string($callback) && strpos($callback, '@') === false) {
             $callback .= '@__invoke';
         }*/
-        
+
         if ($this->isCallableWithAtSign($callback) || $defaultMethod) {
             return $this->callClass($callback, $parameters, $defaultMethod);
         }
