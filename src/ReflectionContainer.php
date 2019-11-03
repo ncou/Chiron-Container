@@ -7,6 +7,10 @@ namespace Chiron\Container;
 use Chiron\Container\Exception\ContainerException;
 use Chiron\Container\Exception\EntityNotFoundException;
 use Psr\Container\ContainerExceptionInterface;
+use  Chiron\Container\Definition\DefinitionInterface;
+use  Chiron\Container\Definition\Definition;
+use  Chiron\Container\Inflector\Inflector;
+use  Chiron\Container\Inflector\InflectorInterface;
 
 // TODO : créer une méthode singleton() ou share() => https://github.com/illuminate/container/blob/master/Container.php#L354
 // https://github.com/thephpleague/container/blob/master/src/Container.php#L92
@@ -140,6 +144,18 @@ class ReflectionContainer implements ContainerInterface
     public function share(string $id, $concrete = null): DefinitionInterface
     {
         return $this->add($id, $concrete, true);
+    }
+
+    /**
+     * Add multiple definitions at once.
+     *
+     * @param array $config definitions indexed by their ids
+     */
+    public function addDefinitions(array $config): void
+    {
+        foreach ($config as $id => $definition) {
+            $this->add($id, $definition);
+        }
     }
 
     /**

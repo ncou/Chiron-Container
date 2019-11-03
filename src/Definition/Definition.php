@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Chiron\Container;
+namespace Chiron\Container\Definition;
 
 class Definition implements DefinitionInterface
 {

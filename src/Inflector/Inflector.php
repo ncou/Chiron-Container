@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Chiron\Container;
+namespace Chiron\Container\Inflector;
 
 class Inflector implements InflectorInterface
 {

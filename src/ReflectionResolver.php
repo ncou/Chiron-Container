@@ -10,6 +10,8 @@ use Chiron\Container\Exception\CannotResolveException;
 use Chiron\Container\Exception\ContainerException;
 use Chiron\Container\Exception\EntityNotFoundException;
 use Chiron\Container\Reflection\ReflectionCallable;
+use  Chiron\Container\Definition\DefinitionInterface;
+use  Chiron\Container\Definition\Definition;
 use Closure;
 use InvalidArgumentException;
 use Psr\Container\ContainerInterface;
