@@ -19,7 +19,7 @@ use Psr\Container\ContainerInterface;
 
 //TODO : Classe de TESTS pour les méthode register : https://github.com/laravel/framework/blob/master/tests/Foundation/FoundationApplicationTest.php
 
-class Container extends ReflectionContainer implements ArrayAccess, FactoryInterface, InvokerInterface
+class Container extends ReflectionContainer implements ArrayAccess, FactoryInterface
 {
     /**
      * The current globally available kernel (if any).
@@ -405,7 +405,6 @@ class Container extends ReflectionContainer implements ArrayAccess, FactoryInter
     /*******************************************************************************
      * Array Access
      ******************************************************************************/
-
     /**
      * {@inheritdoc}
      */
@@ -413,7 +412,6 @@ class Container extends ReflectionContainer implements ArrayAccess, FactoryInter
     {
         return $this->has($name) && $this->get($name) !== null;
     }
-
     /**
      * {@inheritdoc}
      */
@@ -421,7 +419,6 @@ class Container extends ReflectionContainer implements ArrayAccess, FactoryInter
     {
         return $this->get($name);
     }
-
     /**
      * {@inheritdoc}
      */
@@ -429,7 +426,6 @@ class Container extends ReflectionContainer implements ArrayAccess, FactoryInter
     {
         $this->add($name, $value);
     }
-
     /**
      * {@inheritdoc}
      */
@@ -437,4 +433,5 @@ class Container extends ReflectionContainer implements ArrayAccess, FactoryInter
     {
         $this->destroy($name);
     }
+
 }
