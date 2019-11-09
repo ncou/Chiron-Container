@@ -11,6 +11,7 @@ use  Chiron\Container\Definition\DefinitionInterface;
 use  Chiron\Container\Definition\Definition;
 use  Chiron\Container\Inflector\Inflector;
 use  Chiron\Container\Inflector\InflectorInterface;
+use LogicException;
 
 // TODO : créer une méthode singleton() ou share() => https://github.com/illuminate/container/blob/master/Container.php#L354
 // https://github.com/thephpleague/container/blob/master/src/Container.php#L92
@@ -18,6 +19,7 @@ use  Chiron\Container\Inflector\InflectorInterface;
 
 // TODO : améliorer le Circular exception avec le code : https://github.com/symfony/dependency-injection/blob/master/Container.php#L236
 
+// TODO : passer la classe en final, et passer les fonctions protected en private.
 class ReflectionContainer implements ContainerInterface
 {
     /**
@@ -47,6 +49,14 @@ class ReflectionContainer implements ContainerInterface
     {
         // TODO : créer une méthode getResolver() dans cette classe.
         $this->resolver = new ReflectionResolver($this);
+    }
+
+    /**
+     * Container can not be cloned.
+     */
+    public function __clone()
+    {
+        throw new LogicException('Container is not clonable');
     }
 
     /**
