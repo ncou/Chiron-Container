@@ -60,7 +60,7 @@ class ReflectionResolver
         // TODO : il faudrait ajouter aussi une vérif soit "différent de object", sinon ajouter un if en début de proécédure dans le cas ou c'est un "scalaire ou objet" on n'essaye pas de résoudre la variable $concrete.
         if (is_callable($concrete)) {
             //$concrete = $this->resolveCallable($concrete);
-            $instance = $this->call($concrete, $args);
+            $instance = $this->callCallable($concrete, $args);
         }
 
         if (is_string($concrete) && class_exists($concrete)) {
@@ -152,47 +152,12 @@ class ReflectionResolver
         return $class;
     }
 
-    // TODO : regarder ici le code qui permet d'executer aussi les callables ajoutés dans le container   => https://github.com/mrferos/di/blob/master/src/Container.php#L173
-    // grosso modo le typehint de $callee peut être une string présente dans le tableau des closure =>  $this->closure[$calleeName]
-    // TODO : méthode à virer !!!!
-    /*
-    public function call_old(callable $callee, array $arguments = [])
+    public function callCallable(callable $callable, array $args = [])
     {
-        try {
-            return call_user_func_array(
-                $callee,
-                $this->getParameters(new ReflectionCallable($callee), $arguments)
-            );
-        } catch (CannotFindParameterException $e) {
-            throw new CannotResolveException($callee, $e->getParameter());
-        }
-    }*/
+        // TODO : utiliser la méthode call_user_func_array ????
+        return $callable($this->container, $args);
+    }
 
-    /*
-        public function call2($callback, array $parameters = [], ?string $defaultMethod = null)
-        {
-            if ($this->isCallableWithAtSign($callback) || $defaultMethod) {
-                return $this->callClass($callback, $parameters, $defaultMethod);
-            }
-
-
-            if (! is_callable($callback)) {
-                throw new InvalidArgumentException(sprintf(
-                    '(%s) is not resolvable.',
-                    is_array($callback) || is_object($callback) || is_null($callback) ? json_encode($callback) : $callback
-                ));
-            }
-
-            try {
-                return call_user_func_array(
-                    $callback,
-                    $this->getParameters(new ReflectionCallable($callback), $parameters)
-                );
-            } catch (CannotFindParameterException $e) {
-                throw new CannotResolveException($callback, $e->getParameter());
-            }
-        }
-    */
 
     /**
      * Invoke a callable and inject its dependencies.

@@ -11,6 +11,10 @@ use  Chiron\Container\Definition\DefinitionInterface;
 use  Chiron\Container\Definition\Definition;
 use  Chiron\Container\Inflector\Inflector;
 use  Chiron\Container\Inflector\InflectorInterface;
+use Chiron\Container\ServiceProvider\ServiceProviderInterface;
+use Closure;
+use InvalidArgumentException;
+use Psr\Container\ContainerInterface;
 use LogicException;
 
 // TODO : créer une méthode singleton() ou share() => https://github.com/illuminate/container/blob/master/Container.php#L354
@@ -44,6 +48,20 @@ class ReflectionContainer implements ContainerInterface
 
     /** @var ReflectionResolver */
     protected $resolver;
+
+    /**
+     * Indicates if the kernel has "booted".
+     *
+     * @var bool
+     */
+    protected $isBooted = false;
+
+    /**
+     * All of the registered service providers.
+     *
+     * @var array
+     */
+    protected $serviceProviders = [];
 
     public function __construct()
     {
@@ -342,5 +360,121 @@ class ReflectionContainer implements ContainerInterface
         }
 
         return $argumentsToReturn;
+    }
+
+    /*******************************************************************************
+     * Make new class
+     ******************************************************************************/
+
+    /**
+     * {@inheritdoc}
+     */
+    // TODO : améliorer le code regarder ici   =>   https://github.com/illuminate/container/blob/master/Container.php#L778
+    // TODO : améliorer le code et regarder ici => https://github.com/thephpleague/container/blob/68c148e932ef9959af371590940b4217549b5b65/src/Definition/Definition.php#L225
+    // TODO : attention on ne gére pas les alias, alors que cela pourrait servir si on veut builder une classe en utilisant l'alias qui est présent dans le container. Réfléchir si ce cas peut arriver.
+    // TODO : renommer en buildClass() ???? ou plutot en "make()" ????
+    // TODO : améliorer le Circular exception avec le code : https://github.com/symfony/dependency-injection/blob/master/Container.php#L236
+    public function build(string $className, array $arguments = [])
+    {
+        return $this->resolver->build($className, $arguments);
+    }
+
+    /*******************************************************************************
+     * Service Provider
+     ******************************************************************************/
+
+    /**
+     * Register a service provider with the application.
+     *
+     * @param ServiceProviderInterface|string $provider
+     *
+     * @return self
+     */
+    // TODO : améliorer le code : https://github.com/laravel/framework/blob/5.8/src/Illuminate/Foundation/Application.php#L594
+    public function register($provider): self
+    {
+        $provider = $this->resolveProvider($provider);
+
+        // don't process the service if it's already registered
+        if (! $this->isProviderRegistered($provider)) {
+            $this->registerProvider($provider);
+
+            // If the application has already booted, we will call this boot method on
+            // the provider class so it has an opportunity to do its boot logic and
+            // will be ready for any usage by this developer's application logic.
+            if ($this->isBooted) {
+                $this->bootProvider($provider);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Register a service provider with the application.
+     *
+     * @param ServiceProviderInterface|string $provider
+     *
+     * @return ServiceProviderInterface
+     */
+    protected function resolveProvider($provider): ServiceProviderInterface
+    {
+        // If the given "provider" is a string, we will resolve it.
+        // This is simply a more convenient way of specifying your service provider classes.
+        if (is_string($provider) && class_exists($provider)) {
+            $provider = new $provider();
+        }
+
+        // TODO : voir si on garder ce throw car de toute facon le typehint va lever une exception.
+        if (! $provider instanceof ServiceProviderInterface) {
+            throw new InvalidArgumentException(
+                sprintf('The provider must be an instance of "%s" or a valid class name.',
+                    ServiceProviderInterface::class)
+            );
+        }
+
+        return $provider;
+    }
+
+    protected function isProviderRegistered(ServiceProviderInterface $provider): bool
+    {
+        // is service already present in the array ? if it's the case, it's already registered.
+        return array_key_exists(get_class($provider), $this->serviceProviders);
+    }
+
+    protected function registerProvider(ServiceProviderInterface $provider): void
+    {
+        $provider->register($this);
+        // store the registered service
+        $this->serviceProviders[get_class($provider)] = $provider;
+    }
+
+    /**
+     * Boot the application's service providers.
+     */
+    public function boot(): self
+    {
+        if (! $this->isBooted) {
+            foreach ($this->serviceProviders as $provider) {
+                $this->bootProvider($provider);
+            }
+            $this->isBooted = true;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Boot the given service provider.
+     *
+     * @param \Illuminate\Support\ServiceProvider $provider
+     *
+     * @return mixed
+     */
+    protected function bootProvider(ServiceProviderInterface $provider): void
+    {
+        if (method_exists($provider, 'boot')) {
+            $this->call([$provider, 'boot']);
+        }
     }
 }
