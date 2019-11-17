@@ -4,9 +4,7 @@ declare(strict_types=1);
 
 namespace Chiron\Container;
 
-use Psr\Container\ContainerInterface as PsrContainerInterface;
-
-interface FactoryInterface extends PsrContainerInterface
+interface FactoryInterface
 {
     /*
      * @param string $className

@@ -24,7 +24,7 @@ use LogicException;
 // TODO : améliorer le Circular exception avec le code : https://github.com/symfony/dependency-injection/blob/master/Container.php#L236
 
 // TODO : passer la classe en final, et passer les fonctions protected en private.
-class Container implements ContainerInterface, FactoryInterface
+class Container implements ContainerInterface, FactoryInterface, BindingInterface
 {
     /**
      * @var bool
@@ -386,7 +386,7 @@ class Container implements ContainerInterface, FactoryInterface
      * @return self
      */
     // TODO : améliorer le code : https://github.com/laravel/framework/blob/5.8/src/Illuminate/Foundation/Application.php#L594
-    public function register($provider): self
+    public function register($provider)//: self
     {
         $provider = $this->resolveProvider($provider);
 
@@ -395,7 +395,7 @@ class Container implements ContainerInterface, FactoryInterface
             $this->registerProvider($provider);
         }
 
-        return $this;
+        //return $this;
     }
 
     /**
