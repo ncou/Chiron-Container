@@ -62,6 +62,7 @@ class Container implements ContainerInterface, FactoryInterface, BindingInterfac
         $this->share(Container::class, $this);
         $this->share(ContainerInterface::class, $this);
         $this->share(FactoryInterface::class, $this);
+        $this->share(BindingInterface::class, $this);
     }
 
     /**
