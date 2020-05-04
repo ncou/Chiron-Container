@@ -7,15 +7,17 @@ namespace Chiron\Container;
 use Chiron\Container\Exception\ContainerException;
 use Chiron\Container\Exception\EntityNotFoundException;
 use Psr\Container\ContainerExceptionInterface;
-use  Chiron\Container\Definition\DefinitionInterface;
-use  Chiron\Container\Definition\Definition;
-use  Chiron\Container\Inflector\Inflector;
-use  Chiron\Container\Inflector\InflectorInterface;
+use Chiron\Container\Definition\DefinitionInterface;
+use Chiron\Container\Definition\Definition;
+use Chiron\Container\Inflector\Inflector;
+use Chiron\Container\Inflector\InflectorInterface;
 use Chiron\Container\ServiceProvider\ServiceProviderInterface;
 use Closure;
 use InvalidArgumentException;
 use Psr\Container\ContainerInterface;
 use LogicException;
+
+use Chiron\Container\Definition\Reference;
 
 // TODO : créer une méthode singleton() ou share() => https://github.com/illuminate/container/blob/master/Container.php#L354
 // https://github.com/thephpleague/container/blob/master/src/Container.php#L92
@@ -24,15 +26,20 @@ use LogicException;
 // TODO : améliorer le Circular exception avec le code : https://github.com/symfony/dependency-injection/blob/master/Container.php#L236
 
 // TODO : passer la classe en final, et passer les fonctions protected en private.
+// TODO : ajouter une méthode "removeBinding($serviceName)" et la rajouter dans la classe BindingInterface  => https://github.com/spiral/core/blob/master/src/Container.php#L354
 class Container implements ContainerInterface, FactoryInterface, BindingInterface
 {
+    /**
+     * The current globally available container (if any).
+     *
+     * @var static
+     */
+    public static $instance;
+
     /**
      * @var bool
      */
     protected $defaultToShared = false;
-
-    /** @var \Chiron\Container\ContainerInterface */
-    //public static $instance;
 
     /** @var \Chiron\Container\Definition[] */
     protected $definitions = [];
@@ -44,13 +51,10 @@ class Container implements ContainerInterface, FactoryInterface, BindingInterfac
     protected $services = [];
 
     /** @var array */
-    protected $aliases = [];
+    //protected $aliases = [];
 
     /** @var ReflectionResolver */
     protected $resolver;
-
-    /** @var array */
-    protected $serviceProviders = [];
 
     public function __construct()
     {
@@ -88,41 +92,18 @@ class Container implements ContainerInterface, FactoryInterface, BindingInterfac
     }
 
     /**
-     * {@inheritdoc}
+     * Allows for manipulation of specific types on resolution.
+     *
+     * @param string   $type     represent the class name
+     * @param callable $callback
+     *
+     * @return InflectorInterface
      */
-    public function get($name, bool $new = false)
+    public function inflector(string $type, callable $callback): InflectorInterface
     {
-        return $this->resolve($name, $new);
+        return $this->inflectors[] = new Inflector($type, $callback);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    // TODO : mettre en place un systéme de cache dans le cas ou on fait un has() ca va instancier la classe il faudrait la mettre en cache pour éviter de devoir refaire la même chose si on doit faire un get() dans la foulée !!!
-    /*
-    public function has($name)
-    {
-        try {
-            $this->resolve($name);
-
-            return true;
-            // TODO : améliorer le catch et lui attraper toute les exception de type PSR/Container/ContainerException
-        } catch (ContainerExceptionInterface $e) {
-        }
-
-        return false;
-    }*/
-
-    // TODO : améliorer le code, à quoi sert la vérification dans $this->services car si il existe une instance partagée dans ce tableau, elle est forcément présente dans le tableau précédent $this->definitions.
-    // TODO : vérifier si l'ajout de la classe via $this->add() est vraiment nécessaire !!!!
-    public function has($id)
-    {
-        if (! isset($this->definitions[$id]) && class_exists($id)) {
-            $this->add($id);
-        }
-
-        return isset($this->definitions[$id]) || isset($this->services[$id]) || $this->isAlias($id);
-    }
 
     /*
     // TODO : regarder si on peut utiliser cette méthode pour tester le has() !!!!
@@ -157,6 +138,11 @@ class Container implements ContainerInterface, FactoryInterface, BindingInterfac
         return $this->bound($id);
     }*/
 
+    public function alias(string $alias, string $target): void
+    {
+        $this->share($alias, Reference::to($target));
+    }
+
     /**
      * Proxy to add with shared as true.
      *
@@ -168,18 +154,6 @@ class Container implements ContainerInterface, FactoryInterface, BindingInterfac
     public function share(string $id, $concrete = null): DefinitionInterface
     {
         return $this->add($id, $concrete, true);
-    }
-
-    /**
-     * Add multiple definitions at once.
-     *
-     * @param array $config definitions indexed by their ids
-     */
-    public function addDefinitions(array $config): void
-    {
-        foreach ($config as $id => $definition) {
-            $this->add($id, $definition);
-        }
     }
 
     /**
@@ -214,52 +188,15 @@ class Container implements ContainerInterface, FactoryInterface, BindingInterfac
     }
 
     /**
-     * {@inheritdoc}
-     */
-    public function alias(string $alias, string $target): void
-    {
-        $this->aliases[$alias] = $target;
-    }
-
-    /**
-     * Determine if a given string is an alias.
+     * Get a definition to extend.
      *
      * @param string $name
      *
-     * @return bool
+     * @return DefinitionInterface
      */
-    public function isAlias(string $name): bool
+    public function extend(string $name): DefinitionInterface
     {
-        return isset($this->aliases[$name]);
-    }
-
-    /**
-     * Get the alias for an abstract if available.
-     *
-     * @param string $abstract
-     *
-     * @throws \LogicException
-     *
-     * @return string
-     */
-    public function getAlias(string $abstract): string
-    {
-        if (! isset($this->aliases[$abstract])) {
-            return $abstract;
-        }
-        if ($this->aliases[$abstract] === $abstract) {
-            throw new ContainerException("[{$abstract}] is aliased to itself.");
-        }
-
-        return $this->getAlias($this->aliases[$abstract]);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getDefinition(string $name): DefinitionInterface
-    {
-        $name = $this->getAlias($name);
+        //$name = $this->getAlias($name);
 
         if (! array_key_exists($name, $this->definitions)) {
             throw new EntityNotFoundException("Service '$name' is not managed as a definition in the container");
@@ -268,48 +205,70 @@ class Container implements ContainerInterface, FactoryInterface, BindingInterfac
         return $this->definitions[$name];
     }
 
-    /**
-     * Allows for manipulation of specific types on resolution.
-     *
-     * @param string   $type     reprsent the class name
-     * @param callable $callback
-     *
-     * @return InflectorInterface
-     */
-    public function inflector(string $type, callable $callback): InflectorInterface
+    public function isBinded(string $id): bool
     {
-        return $this->inflectors[] = new Inflector($type, $callback);
+        return isset($this->definitions[$id]);
+        //return array_key_exists($id, $this->definitions);
     }
 
+    // TODO : renommer en removeBinding() ????
+    public function unbind(string $id)
+    {
+        unset($this->definitions[$id]);
+    }
+
+
+    // TODO : améliorer le code, à quoi sert la vérification dans $this->services car si il existe une instance partagée dans ce tableau, elle est forcément présente dans le tableau précédent $this->definitions.
+    // TODO : vérifier si l'ajout de la classe via $this->add() est vraiment nécessaire !!!!
+    // TODO : faire uniquement un test sur class_exist($id) || isset($this->definitions[$id])
+    public function has($id)
+    {
+        /*
+        if (! isset($this->definitions[$id]) && class_exists($id)) {
+            $this->add($id);
+        }
+
+        return isset($this->definitions[$id]);// || isset($this->services[$id]);// || $this->isAlias($id);
+        */
+
+        return $this->isBinded($id) || class_exists($id);
+    }
+
+
     /**
-     * @param string $name
-     *
-     * @return mixed|object
+     * {@inheritdoc}
      */
-    protected function resolve($name, bool $new = false)
+    // return mixed
+    public function get($name, bool $new = false)
     {
         // resolve alias
-        $name = $this->getAlias($name);
+        //$name = $this->getAlias($name);
 
         if (array_key_exists($name, $this->services) && $new === false) {
             return $this->services[$name];
         }
 
+        // handle the case when you want to resolve a classname not already binded in the container.
         if (! array_key_exists($name, $this->definitions)) {
             if (! class_exists($name)) {
+                // TODO : utiliser la fonction levenshtein pour afficher les services le plus proche du nom du service recherché ?     https://github.com/symfony/dependency-injection/blob/b4f099e65175874bd326ec9a86d6df57a217a6a4/Container.php#L268
                 throw new EntityNotFoundException("Service '$name' wasn't found in the dependency injection container");
             }
-            $this->add($name);
+            // if the class to build in an instanceof SingletonInterface, we force the share parameter at true.
+            $share = is_subclass_of($name, SingletonInterface::class) ? true : null;
+            $this->add($name, null, $share);
         }
 
         $definition = $this->definitions[$name];
         //$definition = $this->getDefinition($name);
 
-        $resolved = $this->resolver->resolve($definition->getConcrete(), $definition->getAssigns());
+        $resolved = $this->resolver->resolveDefinition($definition);
+        //$resolved = $this->resolver->resolve($definition->getConcrete(), $definition->getAssigns());
         //$instance = $this->resolver->resolve($definition->getConcrete(), $this->convertAssign($definition->assigns));
 
         $resolved = $this->inflect($resolved);
 
+        // singleton
         if ($definition->isShared() && $new === false) {
             $this->services[$name] = $resolved;
         }
@@ -340,6 +299,7 @@ class Container implements ContainerInterface, FactoryInterface, BindingInterfac
     }
 
     // TODO : méthode à virer !!!!
+    /*
     protected function convertAssign(array $arguments): array
     {
         $argumentsToReturn = [];
@@ -356,7 +316,7 @@ class Container implements ContainerInterface, FactoryInterface, BindingInterfac
         }
 
         return $argumentsToReturn;
-    }
+    }*/
 
     /*******************************************************************************
      * Make new class
@@ -370,72 +330,56 @@ class Container implements ContainerInterface, FactoryInterface, BindingInterfac
     // TODO : attention on ne gére pas les alias, alors que cela pourrait servir si on veut builder une classe en utilisant l'alias qui est présent dans le container. Réfléchir si ce cas peut arriver.
     // TODO : renommer en buildClass() ???? ou plutot en "make()" ????
     // TODO : améliorer le Circular exception avec le code : https://github.com/symfony/dependency-injection/blob/master/Container.php#L236
+    // TODO : renommmer la fonction en make() et ajouter ce nom de fonction dans l'interface FactoryInterface
     public function build(string $className, array $arguments = [])
     {
+        //return $this->resolver->resolve($className, $arguments);
         return $this->resolver->build($className, $arguments);
     }
 
     /*******************************************************************************
-     * Service Provider
+     * Singleton
      ******************************************************************************/
+    /**
+     * Get the globally available instance of the container.
+     *
+     * @return static
+     */
+    // TODO : cette méthode devrait renvoyer null dans le cas ou l'instance n'est pas créée => on ne doit pas faire un new static() dans cette fonction !!!!!
+    /*
+    public static function getInstance(): Container
+    {
+        if (is_null(static::$instance)) {
+            static::$instance = new static();
+        }
+        return static::$instance;
+    }*/
+    /**
+     * Set the shared instance of the container.
+     *
+     * @param \Chiron\Container\Container|null $container
+     *
+     * @return \Chiron\Container\Container|static
+     */
+    // TODO : vérifier si on conserve cette méthode ?????
+    /*
+    public static function setInstance(Container $container = null)
+    {
+        // TODO : forcer le type de retour dans la signature de la méthode, et vérifier ce qui se passe si on ne passe rien si le "null" est retourné par cette méthode.
+        return static::$instance = $container;
+    }*/
 
     /**
-     * Register a service provider with the application.
+     * Initialise the instance with the $this value, and return the previous instance (or null on the first call)
      *
-     * @param ServiceProviderInterface|string $provider
-     *
-     * @return self
+     * @return null|static previous instance
      */
-    // TODO : améliorer le code : https://github.com/laravel/framework/blob/5.8/src/Illuminate/Foundation/Application.php#L594
-    public function register($provider)//: self
+    public function setAsGlobal(): ?self
     {
-        $provider = $this->resolveProvider($provider);
+        $previous = static::$instance;
+        static::$instance = $this;
 
-        // don't process the service if it's already registered
-        if (! $this->isProviderRegistered($provider)) {
-            $this->registerProvider($provider);
-        }
-
-        //return $this;
-    }
-
-    /**
-     * Register a service provider with the application.
-     *
-     * @param ServiceProviderInterface|string $provider
-     *
-     * @return ServiceProviderInterface
-     */
-    protected function resolveProvider($provider): ServiceProviderInterface
-    {
-        // If the given "provider" is a string, we will resolve it.
-        // This is simply a more convenient way of specifying your service provider classes.
-        if (is_string($provider) && class_exists($provider)) {
-            $provider = new $provider();
-        }
-
-        // TODO : voir si on garder ce throw car de toute facon le typehint va lever une exception.
-        if (! $provider instanceof ServiceProviderInterface) {
-            throw new InvalidArgumentException(
-                sprintf('The provider must be an instance of "%s" or a valid class name.',
-                    ServiceProviderInterface::class)
-            );
-        }
-
-        return $provider;
-    }
-
-    protected function isProviderRegistered(ServiceProviderInterface $provider): bool
-    {
-        // is service already present in the array ? if it's the case, it's already registered.
-        return array_key_exists(get_class($provider), $this->serviceProviders);
-    }
-
-    protected function registerProvider(ServiceProviderInterface $provider): void
-    {
-        $provider->register($this);
-        // store the registered service
-        $this->serviceProviders[get_class($provider)] = $provider;
+        return $previous;
     }
 
 }

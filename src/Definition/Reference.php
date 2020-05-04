@@ -31,22 +31,27 @@ class Reference //implements DefinitionInterface
         $this->id = $id;
     }
 
+/*
     public function getId(): string
     {
         return $this->id;
     }
+*/
+
     public static function to(string $id): Reference
     {
         return new self($id);
     }
+
+    // TODO : il faudrait lever une exception du style EntryNotFound dans le cas ou la référence de l'alias n'existe pas.
     public function resolve(ContainerInterface $container, array $params = [])
     {
         if (empty($params)) {
             $result = $container->get($this->id);
         } else {
-            /** @noinspection PhpMethodParametersCountMismatchInspection passing parameters for containers supporting them */
             $result = $container->get($this->id, $params);
         }
+
         return $result;
     }
 }

@@ -10,8 +10,8 @@ use Chiron\Container\Exception\CannotResolveException;
 use Chiron\Container\Exception\ContainerException;
 use Chiron\Container\Exception\EntityNotFoundException;
 use Chiron\Container\Reflection\ReflectionCallable;
-use  Chiron\Container\Definition\DefinitionInterface;
-use  Chiron\Container\Definition\Definition;
+use Chiron\Container\Definition\DefinitionInterface;
+use Chiron\Container\Definition\Definition;
 use Closure;
 use InvalidArgumentException;
 use Psr\Container\ContainerInterface;
@@ -21,6 +21,8 @@ use ReflectionFunction;
 use ReflectionFunctionAbstract;
 use ReflectionMethod;
 use ReflectionObject;
+
+use Chiron\Container\Definition\Reference;
 
 // https://github.com/thephpleague/container/blob/master/src/Container.php#L92
 //https://github.com/mrferos/di/blob/master/src/Container.php#L99
@@ -51,29 +53,65 @@ class ReflectionResolver
         $this->container = $container;
     }
 
+    public function resolveDefinition(DefinitionInterface $definition)
+    {
+        $concrete = $definition->getConcrete();
+        $parameters = $definition->getAssigns();
+        $entryName = $definition->getAlias();
+
+        // Check if we are already getting this entry -> circular dependency
+        if (isset($this->entriesBeingResolved[$entryName])) {
+            throw new ContainerException(sprintf(
+                'Circular dependency detected while trying to resolve entry "%s"',
+                $entryName
+            ));
+        }
+        $this->entriesBeingResolved[$entryName] = true;
+
+        // Resolve the definition
+        try {
+            $value = $this->resolve($concrete, $parameters);
+        } finally {
+            unset($this->entriesBeingResolved[$entryName]);
+        }
+
+        return $value;
+
+    }
+
+    // TODO : exemple ==>    https://github.com/thephpleague/container/blob/master/src/Definition/Definition.php#L189
     // $concrete c'est un mixed
-    public function resolve($concrete, array $args = [])
+    private function resolve($concrete, array $parameters = [])
     {
         $instance = $concrete;
+
+        // TODO : permettre de passer dans le concrete un tableau avec un nom string de class ou une instance de classe et un second paramétre de type string qui est une méthode privée. Utiliser la reflection ->setAccessible(true) pour permettre d'invoker cette méthode. Cela est utilse lors de la création de "factory" de type ->bind('id', ['class', 'method']) et que la méthode est privée.  ====>  https://github.com/spiral/core/blob/master/src/Container.php#L499
 
         // TODO : comment ca sez passe si on a mis dans la définition une instance d'une classe qui a une méthode __invoke ???? elle va surement être interprété comme un callable mais ce n'est pas ce qu'on souhaite !!!!
         // TODO : il faudrait ajouter aussi une vérif soit "différent de object", sinon ajouter un if en début de proécédure dans le cas ou c'est un "scalaire ou objet" on n'essaye pas de résoudre la variable $concrete.
         if (is_callable($concrete)) {
             //$concrete = $this->resolveCallable($concrete);
-            $instance = $this->callCallable($concrete, $args);
+            $instance = $this->callCallable($concrete, $parameters);
         }
 
         if (is_string($concrete) && class_exists($concrete)) {
             //$concrete = $this->resolveClass($concrete);
-            $instance = $this->build($concrete, $args);
+            $instance = $this->build($concrete, $parameters);
         }
 
+        //TODO : code à améliorer surtout dans le cas ou il y a des paramétres !!!!!
+        if ($concrete instanceof Reference) {
+            $instance = $concrete->resolve($this->container, $parameters);
+        }
+
+        // could be an instance or a scalar
         return $instance;
     }
 
     // TODO : ajouter la signature dans l'interface
     // TODO : regarder aussi ici : https://github.com/mrferos/di/blob/master/src/Definition/AbstractDefinition.php#L75
     // TODO : regarder ici pour utiliser le arobase @    https://github.com/slince/di/blob/master/DefinitionResolver.php#L210
+    // TODO : améliorer le resolve avec la gestion des classes "Raw" et "Reference" =>   https://github.com/thephpleague/container/blob/91a751faabb5e3f5e307d571e23d8aacc4acde88/src/Argument/ArgumentResolverTrait.php#L17
     public function resolveArguments(array $arguments): array
     {
         foreach ($arguments as &$arg) {
@@ -104,15 +142,6 @@ class ReflectionResolver
 
         $class = $this->reflectClass($className);
 
-        // Check if we are already getting this entry -> circular dependency
-        if (isset($this->entriesBeingResolved[$className])) {
-            throw new ContainerException(sprintf(
-                'Circular dependency detected while trying to resolve entry "%s"',
-                $className
-            ));
-        }
-        $this->entriesBeingResolved[$className] = true;
-
         // https://github.com/spiral/core/blob/02580dff7f1fcbc5e74caa1f78ea84c0e4c0d92e/src/Container.php#L534
         // https://github.com/spiral/core/blob/02580dff7f1fcbc5e74caa1f78ea84c0e4c0d92e/src/Container.php#L551
         // https://github.com/spiral/core/blob/02580dff7f1fcbc5e74caa1f78ea84c0e4c0d92e/src/Container.php#L558
@@ -120,12 +149,8 @@ class ReflectionResolver
         if ($constructor = $class->getConstructor()) {
             $arguments = $this->getParameters($constructor, $arguments);
 
-            unset($this->entriesBeingResolved[$className]);
-
             return new $className(...$arguments);
         }
-
-        unset($this->entriesBeingResolved[$className]);
 
         //$reflection->newInstanceArgs($resolved);
         return new $className();
@@ -302,7 +327,14 @@ class ReflectionResolver
                     continue;
                 }
 
-                throw new ContainerException("Parameter '{$paramName}' cannot be resolved"); // #4.
+
+                // TODO : à regrouper dans une classe ArgumentException
+                $name = $reflection->getName();
+                if ($reflection instanceof ReflectionMethod) {
+                    $name = $reflection->class . '::' . $name;
+                }
+                throw new ContainerException("Parameter '{$paramName}' cannot be resolved in '{$name}'"); // #4.
+                // TODO -- END
             } catch (ReflectionException $e) {
                 // ReflectionException is thrown when the class doesn't exist.
                 throw new ContainerException("Parameter '{$paramName}' cannot be resolved");

@@ -8,6 +8,7 @@ use  Chiron\Container\Definition\DefinitionInterface;
 use Psr\Container\ContainerInterface;
 use  Chiron\Container\Inflector\InflectorInterface;
 
+// TODO : nettoyer les méthodes non utilisées
 interface BindingInterface
 {
     /**
@@ -38,7 +39,7 @@ interface BindingInterface
      *
      * @return self
      */
-    public function defaultToShared(bool $shared = true): ContainerInterface;
+    //public function defaultToShared(bool $shared = true): ContainerInterface;
 
     /**
      * Proxy to add with shared as true.
@@ -55,7 +56,7 @@ interface BindingInterface
      *
      * @param array $config definitions indexed by their ids
      */
-    public function addDefinitions(array $config): void;
+    //public function addDefinitions(array $config): void;
 
     /**
      * Add an item to the container.
@@ -75,11 +76,17 @@ interface BindingInterface
     public function alias(string $alias, string $target);
 
     /**
+     * Get a definition to extend.
+     *
      * @param string $name
      *
      * @return DefinitionInterface
      */
-    public function getDefinition(string $name): DefinitionInterface;
+    public function extend(string $name): DefinitionInterface;
+
+    public function isBinded(string $id): bool;
+
+    public function unbind(string $id);
 
     /**
      * Determine if a given string is an alias.
@@ -88,7 +95,7 @@ interface BindingInterface
      *
      * @return bool
      */
-    public function isAlias(string $name): bool;
+    //public function isAlias(string $name): bool;
 
     /**
      * Get the alias for an abstract if available.
@@ -99,7 +106,7 @@ interface BindingInterface
      *
      * @return string
      */
-    public function getAlias(string $abstract): string;
+    //public function getAlias(string $abstract): string;
 
     /**
      * Allows for manipulation of specific types on resolution.
@@ -109,7 +116,7 @@ interface BindingInterface
      *
      * @return InflectorInterface
      */
-    public function inflector(string $type, callable $callback): InflectorInterface;
+    //public function inflector(string $type, callable $callback): InflectorInterface;
 
     /**
      * Register a service provider with the application.
@@ -119,7 +126,7 @@ interface BindingInterface
      * @return self
      */
     // TODO : améliorer le code : https://github.com/laravel/framework/blob/5.8/src/Illuminate/Foundation/Application.php#L594
-    public function register($provider);
+    //public function register($provider);
 
     /*
      * @param array $arguments

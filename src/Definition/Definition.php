@@ -84,6 +84,7 @@ class Definition implements DefinitionInterface
      * @param string $id
      * @param mixed  $concrete
      */
+    // TODO : renommer $id en $name et $this->alias en $this->name
     public function __construct(string $id, $concrete = null)
     {
         $concrete = $concrete ?? $id;
@@ -94,6 +95,7 @@ class Definition implements DefinitionInterface
     /**
      * {@inheritdoc}
      */
+    // TODO : renommer en setName
     public function setAlias(string $id): DefinitionInterface
     {
         $this->alias = $id;
@@ -104,6 +106,7 @@ class Definition implements DefinitionInterface
     /**
      * {@inheritdoc}
      */
+    // TODO : renommer en getName
     public function getAlias(): string
     {
         return $this->alias;
