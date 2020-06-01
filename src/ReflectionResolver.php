@@ -104,30 +104,15 @@ class ReflectionResolver
             $instance = $concrete->resolve($this->container, $parameters);
         }
 
-        // could be an instance or a scalar
+        // could be an object instance or a scalar
         return $instance;
     }
 
-    // TODO : ajouter la signature dans l'interface
-    // TODO : regarder aussi ici : https://github.com/mrferos/di/blob/master/src/Definition/AbstractDefinition.php#L75
-    // TODO : regarder ici pour utiliser le arobase @    https://github.com/slince/di/blob/master/DefinitionResolver.php#L210
-    // TODO : améliorer le resolve avec la gestion des classes "Raw" et "Reference" =>   https://github.com/thephpleague/container/blob/91a751faabb5e3f5e307d571e23d8aacc4acde88/src/Argument/ArgumentResolverTrait.php#L17
-    public function resolveArguments(array $arguments): array
+    public function callCallable(callable $callable, array $args = [])
     {
-        foreach ($arguments as &$arg) {
-            if (! is_string($arg)) {
-                continue;
-            }
-
-            //if (! is_null($this->container) && $this->container->has($arg)) {
-            if ($this->container->has($arg)) {
-                $arg = $this->container->get($arg);
-
-                continue;
-            }
-        }
-
-        return $arguments;
+        // TODO : il faudrait pas faire un appel à la méthode resolveArguments() dans le cas notamment ou il y a un paramétre du callable qui serait de type Reference::class ????
+        // TODO : utiliser la méthode call_user_func_array ????
+        return $callable($this->container, $args);
     }
 
     // TODO : améliorer le code regarder ici   =>   https://github.com/illuminate/container/blob/master/Container.php#L778
@@ -136,6 +121,7 @@ class ReflectionResolver
     // TODO : renommer en buildClass() ????
     // TODO : améliorer le Circular exception avec le code : https://github.com/symfony/dependency-injection/blob/master/Container.php#L236
     // TODO : renommer la fonction en "make()"
+    // TODO : il n'y a pas un risque de références circulaires si on appel directement cette méthode qui est public.
     public function build(string $className, array $arguments = [])
     {
         $arguments = $this->resolveArguments($arguments);
@@ -156,9 +142,33 @@ class ReflectionResolver
         return new $className();
     }
 
+    // TODO : ajouter la signature dans l'interface
+    // TODO : regarder aussi ici : https://github.com/mrferos/di/blob/master/src/Definition/AbstractDefinition.php#L75
+    // TODO : regarder ici pour utiliser le arobase @    https://github.com/slince/di/blob/master/DefinitionResolver.php#L210
+    // TODO : améliorer le resolve avec la gestion des classes "Raw" et "Reference" =>   https://github.com/thephpleague/container/blob/91a751faabb5e3f5e307d571e23d8aacc4acde88/src/Argument/ArgumentResolverTrait.php#L17
+    // TODO : vérifier pourquoi c'est une méthode "public" et non pas private !!!!
+    public function resolveArguments(array $arguments): array
+    {
+        foreach ($arguments as &$arg) {
+            if (! is_string($arg)) {
+                continue;
+            }
+
+            //if (! is_null($this->container) && $this->container->has($arg)) {
+            if ($this->container->has($arg)) {
+                $arg = $this->container->get($arg);
+
+                continue;
+            }
+        }
+
+        return $arguments;
+    }
+
     private function reflectClass(string $className): ReflectionClass
     {
         if (! class_exists($className)) {
+            // TODO  : on devrait pas renvoyer une ContainerException ????
             throw new InvalidArgumentException("Entry '{$className}' cannot be resolved");
         }
 
@@ -177,12 +187,6 @@ class ReflectionResolver
         return $class;
     }
 
-    public function callCallable(callable $callable, array $args = [])
-    {
-        // TODO : utiliser la méthode call_user_func_array ????
-        return $callable($this->container, $args);
-    }
-
 
     /**
      * Invoke a callable and inject its dependencies.
@@ -192,6 +196,7 @@ class ReflectionResolver
      *
      * @return mixed
      */
+    // TODO : méthode à virer ou alors utiliser un object Invoker::class dans cette méthode qui serait un proxy pour appeller la méthode invoke(). Idéalement il faudrait plutot déplacer cette méthode (qui utiliserait un invoker directement dans la classe Container)
     //https://github.com/yiisoft/injector/blob/master/src/Injector.php#L69
     public function call(callable $callable, array $args = [])
     {
@@ -333,6 +338,7 @@ class ReflectionResolver
                 if ($reflection instanceof ReflectionMethod) {
                     $name = $reflection->class . '::' . $name;
                 }
+
                 throw new ContainerException("Parameter '{$paramName}' cannot be resolved in '{$name}'"); // #4.
                 // TODO -- END
             } catch (ReflectionException $e) {

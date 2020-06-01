@@ -17,6 +17,7 @@ use InvalidArgumentException;
 use Psr\Container\ContainerInterface;
 use LogicException;
 
+// TODO : remonter la classe Reference à la racine du Container car ce n'est pas une définition !!!!! Eventuellement la déplacer dans un répertoire "Argument" ou "Support"
 use Chiron\Container\Definition\Reference;
 
 // TODO : créer une méthode singleton() ou share() => https://github.com/illuminate/container/blob/master/Container.php#L354
@@ -27,7 +28,12 @@ use Chiron\Container\Definition\Reference;
 
 // TODO : passer la classe en final, et passer les fonctions protected en private.
 // TODO : ajouter une méthode "removeBinding($serviceName)" et la rajouter dans la classe BindingInterface  => https://github.com/spiral/core/blob/master/src/Container.php#L354
-class Container implements ContainerInterface, FactoryInterface, BindingInterface
+
+/**
+ * Container implements a [dependency injection](http://en.wikipedia.org/wiki/Dependency_injection) container.
+ */
+// TODO : lui ajouter un InvokerInterface + ajouter la méthode call (ou invoker) et make (ou build) en public directement dans cette classe Container::class
+class Container implements ContainerInterface, BindingInterface, FactoryInterface
 {
     /**
      * The current globally available container (if any).
@@ -67,6 +73,8 @@ class Container implements ContainerInterface, FactoryInterface, BindingInterfac
         $this->share(ContainerInterface::class, $this);
         $this->share(FactoryInterface::class, $this);
         $this->share(BindingInterface::class, $this);
+
+        // TODO : ajouter un binding sur FactoryInterface et sur InvokerInterface
     }
 
     /**
@@ -138,6 +146,7 @@ class Container implements ContainerInterface, FactoryInterface, BindingInterfac
         return $this->bound($id);
     }*/
 
+    // TODO : on devrait pas retourner un DefinitionInterface ? cad faire un return du singleton() ????
     public function alias(string $alias, string $target): void
     {
         $this->share($alias, Reference::to($target));
@@ -151,6 +160,7 @@ class Container implements ContainerInterface, FactoryInterface, BindingInterfac
      *
      * @return \League\Container\Definition\DefinitionInterface
      */
+    // TODO : méthode à renommer en "singleton()"
     public function share(string $id, $concrete = null): DefinitionInterface
     {
         return $this->add($id, $concrete, true);
@@ -205,6 +215,7 @@ class Container implements ContainerInterface, FactoryInterface, BindingInterfac
         return $this->definitions[$name];
     }
 
+    // TODO : renommer la méthode en bound()
     public function isBinded(string $id): bool
     {
         return isset($this->definitions[$id]);
@@ -233,7 +244,6 @@ class Container implements ContainerInterface, FactoryInterface, BindingInterfac
 
         return $this->isBinded($id) || class_exists($id);
     }
-
 
     /**
      * {@inheritdoc}
