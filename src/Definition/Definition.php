@@ -4,14 +4,25 @@ declare(strict_types=1);
 
 namespace Chiron\Container\Definition;
 
-class Definition implements DefinitionInterface
+use Chiron\Container\Container;
+use Chiron\Container\Reference;
+
+//https://github.com/thephpleague/container/blob/master/src/Definition/Definition.php
+//https://github.com/symfony/dependency-injection/blob/master/Definition.php
+//https://github.com/slince/di/blob/master/Definition.php
+
+// TODO : ajouter le notion de Tags et une méthode "tagged" dans le container pour récupérer les éléments taggués : https://github.com/illuminate/container/blob/master/Container.php#L455
+
+// TODO : virer l'interface DefinitionInterface qui ne sert à rien !!!!
+// TODO : il faudrait pas faire porter les mutations directement dans la classe Definition ? et elles seraient appliquées lors de l'appel de la méthode resolve. => attention pas forcément car tu peux ajouter une mutation sur une Interface, et lorsque tu vas résoudre une classe, tu n'auras pas les autres définitons de visible pour les interfaces implémentées par cette classe target. Ou alors rendre la méthode $container->mutate() public et la faire appeller depuis le Definition->resolve().
+final class Definition implements DefinitionInterface
 {
-    /** @var array */
+
+/*
+
     public $assigns = [];
 
-    /**
-     * {@inheritdoc}
-     */
+
     public function assign(string $paramName, $target): DefinitionInterface
     {
         $this->assigns[$paramName] = $target;
@@ -19,9 +30,7 @@ class Definition implements DefinitionInterface
         return $this;
     }
 
-    /**
-     * {@inheritdoc}
-     */
+
     public function assignMany(array $params = []): DefinitionInterface
     {
         $this->assigns = $params + $this->assigns;
@@ -34,11 +43,7 @@ class Definition implements DefinitionInterface
         return $this->convertAssign($this->assigns);
     }
 
-    /**
-     * @param array $arguments
-     *
-     * @return array
-     */
+
     // TODO : code à virer
     protected function convertAssign(array $arguments): array
     {
@@ -57,48 +62,49 @@ class Definition implements DefinitionInterface
 
         return $argumentsToReturn;
     }
+*/
 
     /**
      * @var string
      */
-    protected $alias;
+    private $name;
 
     /**
      * @var mixed
      */
-    protected $concrete;
+    private $concrete;
 
     /**
      * @var bool
      */
-    protected $shared = false;
+    private $shared = false;
 
     /**
      * @var array
      */
-    protected $arguments = [];
+    private $arguments = [];
 
     /**
      * Constructor.
      *
-     * @param string $id
+     * @param string $name
      * @param mixed  $concrete
      */
-    // TODO : renommer $id en $name et $this->alias en $this->name
-    public function __construct(string $id, $concrete = null)
+    // TODO : remplacer les références sur le libellé "name" par le libellé "id" ???
+    public function __construct(string $name, $concrete = null)
     {
-        $concrete = $concrete ?? $id;
-        $this->alias = $id;
+        $concrete = $concrete ?? $name;
+        $this->name = $name;
         $this->concrete = $concrete;
     }
 
     /**
      * {@inheritdoc}
      */
-    // TODO : renommer en setName
-    public function setAlias(string $id): DefinitionInterface
+    // TODO : attention c'est dangereux de laisser cette méthode accessible car l'utilisateur pourrait faire n'importe quoi, et il faudra surement faire un reset du $this->resolved en cas de changement de nom.
+    public function setName(string $name): DefinitionInterface
     {
-        $this->alias = $id;
+        $this->name = $name;
 
         return $this;
     }
@@ -106,10 +112,9 @@ class Definition implements DefinitionInterface
     /**
      * {@inheritdoc}
      */
-    // TODO : renommer en getName
-    public function getAlias(): string
+    public function getName(): string
     {
-        return $this->alias;
+        return $this->name;
     }
 
     /**
@@ -117,6 +122,7 @@ class Definition implements DefinitionInterface
      */
     public function setShared(bool $shared = true): DefinitionInterface
     {
+        // TODO : on devrait pas lever une exception si on essaye de mettre une un concrete de type instance ou de type closure ou scalar en mode shared, ca n'a pas de sens !!! une instance sera toujour shared
         $this->shared = $shared;
 
         return $this;
@@ -168,5 +174,37 @@ class Definition implements DefinitionInterface
         }
 
         return $this;
+    }
+
+    // TODO : déplacer ici la logique du $new pour stocker dans cette classe le résultat de la résolution dans $this->resolved     https://github.com/thephpleague/container/blob/master/src/Definition/Definition.php#L193
+    // return mixed
+    public function resolve(Container $container, bool $new)
+    {
+        // handle the case if $concrete is an object instance or a scalar.
+        $resolved = $concrete = $this->concrete;
+
+        // TODO : permettre de passer dans le concrete un tableau avec un nom string de class ou une instance de classe et un second paramétre de type string qui est une méthode privée. Utiliser la reflection ->setAccessible(true) pour permettre d'invoker cette méthode. Cela est utilse lors de la création de "factory" de type ->bind('id', ['class', 'method']) et que la méthode est privée.  ====>  https://github.com/spiral/core/blob/master/src/Container.php#L499
+
+        // TODO : comment ca sez passe si on a mis dans la définition une instance d'une classe qui a une méthode __invoke ???? elle va surement être interprété comme un callable mais ce n'est pas ce qu'on souhaite !!!!
+        // TODO : il faudrait ajouter aussi une vérif soit "différent de object", sinon ajouter un if en début de proécédure dans le cas ou c'est un "scalaire ou objet" on n'essaye pas de résoudre la variable $concrete.
+        // TODO : il faudra surement résoudre les arguments, car par exemple on pourrait avoir comme argument une classe Reference pour les arguments du constructeur. ex : bind(Foobar::class)->addArgument(['request' => Reference::to('XXXXX')]) ou une classe Raw par exemple.
+        if (is_callable($concrete)) {
+            $resolved = $container->invoke($concrete, $this->arguments);
+        }
+
+        if (is_string($concrete) && class_exists($concrete)) {
+            $resolved = $container->build($concrete, $this->arguments);
+        }
+
+        // TODO : créer une interface ResolvableInterface pour la signature de la méthode "resolve()" ? ca permettrait de l'utiliser pour les classes Raw/Reference et d'externaliser cette méthode de la classe DefinitionInterface.
+        if ($concrete instanceof Reference) {
+            // TODO : éventuellement pour éviter de porter la logique dans la méthode Reference::resolve, on pourrait faire le $container->get() directement ici, et ne laisser qu'une méthode dans cette classe "getValue" par exemple. Ca permettrait de préparer la prochaine classe "Raw" qui retournerai directement le résultat "$resolved = $concrete->getValue()"
+
+            // TODO : on devrait pas lever une exception si la clés de l'item à rechercher n'est pas bindée dans le container ? car ca limiterai les "références" à uniquement ce qui est déjà bound()===true, car c'est utilisé pour des alias, sans cette vérification on aurait une possiblité que l'utilisateur fasse une référence sur une classe non bindée et donc ca va créer la classe, ce qui n'est pas le but de cette classe !!!!
+
+            $resolved = $concrete->resolve($container, $new);
+        }
+
+        return $resolved;
     }
 }

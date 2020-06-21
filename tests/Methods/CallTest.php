@@ -25,7 +25,7 @@ class CallTest extends TestCase
     {
         $container = new Container();
 
-        $container->add(CallTestDependencyInterface::class, CallTestDependency::class);
+        $container->bind(CallTestDependencyInterface::class, CallTestDependency::class);
 
         $result = $container->call(__NAMESPACE__ . '\\callTestHasTypedParam');
         static::assertInstanceOf(CallTestDependencyInterface::class, $result);
@@ -74,7 +74,7 @@ class CallTest extends TestCase
     {
         $container = new Container();
 
-        $container->add(CallTestDependencyInterface::class, CallTestDependency::class);
+        $container->bind(CallTestDependencyInterface::class, CallTestDependency::class);
 
         $container->call(__NAMESPACE__ . '\\callTestHasComplexParam');
     }
@@ -83,7 +83,7 @@ class CallTest extends TestCase
     {
         $container = new Container();
 
-        $container->add(CallTestDependencyInterface::class, CallTestDependency::class);
+        $container->bind(CallTestDependencyInterface::class, CallTestDependency::class);
 
         // only sequential
         $result = $container->call(__NAMESPACE__ . '\\callTestHasComplexParam', [
@@ -180,7 +180,7 @@ class CallTest extends TestCase
 
         $expected = new CallTestCallWithOnlyAlias(1111);
 
-        $container->add(CallTestCallWithOnlyAlias::class, $expected);
+        $container->bind(CallTestCallWithOnlyAlias::class, $expected);
 
         $actual = $container->call(function (CallTestCallWithOnlyAliasInterface $depend) {
             return $depend;

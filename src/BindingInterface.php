@@ -47,9 +47,9 @@ interface BindingInterface
      * @param string $id
      * @param mixed  $concrete
      *
-     * @return \League\Container\Definition\DefinitionInterface
+     * @return DefinitionInterface
      */
-    public function share(string $id, $concrete = null): DefinitionInterface;
+    public function singleton(string $id, $concrete = null): DefinitionInterface;
 
     /**
      * Add multiple definitions at once.
@@ -65,15 +65,17 @@ interface BindingInterface
      * @param mixed  $concrete
      * @param bool   $shared
      *
-     * @return \League\Container\Definition\DefinitionInterface
+     * @return DefinitionInterface
      */
-    public function add(string $id, $concrete = null, bool $shared = null): DefinitionInterface;
+    public function bind(string $id, $concrete = null, bool $shared = null): DefinitionInterface;
 
     /**
      * @param string $alias
      * @param string $target
+     *
+     * @return DefinitionInterface
      */
-    public function alias(string $alias, string $target);
+    public function alias(string $alias, string $target): DefinitionInterface;
 
     /**
      * Get a definition to extend.
@@ -84,9 +86,9 @@ interface BindingInterface
      */
     public function extend(string $name): DefinitionInterface;
 
-    public function isBinded(string $id): bool;
+    public function bound(string $id): bool;
 
-    public function unbind(string $id);
+    public function remove(string $id): void;
 
     /**
      * Determine if a given string is an alias.

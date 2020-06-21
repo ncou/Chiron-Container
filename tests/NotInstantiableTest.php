@@ -6,6 +6,7 @@ namespace Chiron\Tests\Container;
 
 use Chiron\Container\Container;
 use PHPUnit\Framework\TestCase;
+use InvalidArgumentException;
 
 class NotInstantiableTest extends TestCase
 {
@@ -14,14 +15,14 @@ class NotInstantiableTest extends TestCase
         $container = new Container();
 
         static::assertFalse($container->has(ContainerTestInterface::class)); // interface
-        static::assertFalse($container->has(ContainerTestAbstract::class)); // abstract class
+        static::assertTrue($container->has(ContainerTestAbstract::class)); // abstract class
         static::assertFalse($container->has(ContainerTestTrait::class)); // trait
-        static::assertFalse($container->has(ContainerTestPrivateConstructor::class)); // private constructor
+        static::assertTrue($container->has(ContainerTestPrivateConstructor::class)); // private constructor
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\EntityNotFoundException
-     * @expectedExceptionMessage it was not found;
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage Entry 'Chiron\Tests\Container\ContainerTestInterface' cannot be resolved
      */
     public function testBuildInterface()
     {
@@ -31,8 +32,8 @@ class NotInstantiableTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\ContainerException
-     * @expectedExceptionMessage cannot be resolved: the class is not instantiable
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage Entry "Chiron\Tests\Container\ContainerTestAbstract" cannot be resolved: the class is not instantiable
      */
     public function testBuildAbstractClass()
     {
@@ -42,8 +43,8 @@ class NotInstantiableTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\EntityNotFoundException
-     * @expectedExceptionMessage it was not found;
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage Entry 'Chiron\Tests\Container\ContainerTestTrait' cannot be resolved
      */
     public function testBuildTrait()
     {
@@ -53,8 +54,8 @@ class NotInstantiableTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\ContainerException
-     * @expectedExceptionMessage cannot be resolved: the class is not instantiable
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage Entry "Chiron\Tests\Container\ContainerTestPrivateConstructor" cannot be resolved: the class is not instantiable
      */
     public function testBuildPrivateConstructorClass()
     {

@@ -11,7 +11,7 @@ class AssignValueTest extends TestCase
     {
         // bind interface
         $container = new Container();
-        $container->add(AssignValueTestClassIF::class, AssignValueTestClass::class)->assign('dep', ['value' => 'hello dependency!']);
+        $container->bind(AssignValueTestClassIF::class, AssignValueTestClass::class)->assign('dep', ['value' => 'hello dependency!']);
 
         $object = $container->get(AssignValueTestClass::class);
         static::assertInstanceOf(AssignValueTestClass::class, $object);
@@ -23,7 +23,7 @@ class AssignValueTest extends TestCase
 
         // bind class directly
         $container = new Container();
-        $container->add(AssignValueTestClass::class)->assign('dep', ['value' => 'hello dependency!']);
+        $container->bind(AssignValueTestClass::class)->assign('dep', ['value' => 'hello dependency!']);
 
         $object = $container->get(AssignValueTestClass::class);
         static::assertInstanceOf(AssignValueTestClass::class, $object);
@@ -33,7 +33,7 @@ class AssignValueTest extends TestCase
     public function testAssignValueByClosure()
     {
         $container = new Container();
-        $container->add(AssignValueTestClassIF::class, function ($dep) {
+        $container->bind(AssignValueTestClassIF::class, function ($dep) {
             return new AssignValueTestClass($dep . ' from closure');
         })->assign('dep', ['value' => 'hello dependency!']);
 

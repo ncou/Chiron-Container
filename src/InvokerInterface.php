@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Chiron\Container;
 
-interface FactoryInterface
+interface InvokerInterface
 {
     /*
      * @param string $className
@@ -12,6 +12,6 @@ interface FactoryInterface
      *
      * @return object
      */
-    // TODO : renommer la méthode en make()
-    public function build(string $className, array $arguments = []);
+    // TODO : renommer la méthode en call()
+    public function invoke(callable $callable, array $arguments = []);
 }

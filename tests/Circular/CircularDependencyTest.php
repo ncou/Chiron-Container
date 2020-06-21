@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Chiron\Tests\Container;
+namespace Chiron\Tests\Container\Circular;
 
 use Chiron\Container\Container;
 use PHPUnit\Framework\TestCase;
@@ -57,8 +57,8 @@ class CircularDependencyTest extends TestCase
     {
         $container = new Container();
 
-        $container->add(Class1CircularDependency::class);
-        $container->add(Class2CircularDependency::class);
+        $container->bind(Class1CircularDependency::class);
+        $container->bind(Class2CircularDependency::class);
 
         $object = $container->get(Class1CircularDependency::class);
 
@@ -85,8 +85,8 @@ class CircularDependencyTest extends TestCase
     {
         $container = new Container();
 
-        $container->add(Class1CircularDependency::class);
-        $container->add(Class2CircularDependency::class);
+        $container->bind(Class1CircularDependency::class);
+        $container->bind(Class2CircularDependency::class);
 
         $object = $container->build(Class1CircularDependency::class);
 
@@ -102,8 +102,8 @@ class CircularDependencyTest extends TestCase
     {
         $container = new Container();
 
-        $container->add(Class1CircularDependency::class);
-        $container->add(Class2CircularDependency::class);
+        $container->bind(Class1CircularDependency::class);
+        $container->bind(Class2CircularDependency::class);
 
         $callable = function (Class1CircularDependency $class) {
             return $class;
@@ -123,14 +123,14 @@ class CircularDependencyTest extends TestCase
     {
         $container = new Container();
 
-        $container->add(Class1CircularDependency::class);
-        $container->add(Class2CircularDependency::class);
+        $container->bind(Class1CircularDependency::class);
+        $container->bind(Class2CircularDependency::class);
 
         $callable = function (Class1CircularDependency $class) {
             return $class;
         };
 
-        $container->add('circular', $callable);
+        $container->bind('circular', $callable);
 
         $object = $container->get('circular');
 

@@ -24,7 +24,7 @@ class BuildTest extends TestCase
     public function testBuildAutoResolveSuccess()
     {
         $container = new Container();
-        $container->add(BuildTestDependencyInterface::class, BuildTestDependency::class);
+        $container->bind(BuildTestDependencyInterface::class, BuildTestDependency::class);
 
         $object = $container->build(BuildTestHasTypedParam::class);
         static::assertInstanceOf(BuildTestHasTypedParam::class, $object);
@@ -131,7 +131,7 @@ class BuildTest extends TestCase
     {
         $container = new Container();
 
-        $container->add(BuildTestDependencyInterface::class, BuildTestDependency::class);
+        $container->bind(BuildTestDependencyInterface::class, BuildTestDependency::class);
 
         $container->build(BuildTestHasComplexParam::class);
     }
@@ -149,7 +149,7 @@ class BuildTest extends TestCase
     {
         $container = new Container();
 
-        $container->add(BuildTestHasTypedParamString::class, new BuildTestHasTypedParamString('bar'));
+        $container->bind(BuildTestHasTypedParamString::class, new BuildTestHasTypedParamString('bar'));
 
         $object = $container->build(BuildTestClassInstance::class);
 

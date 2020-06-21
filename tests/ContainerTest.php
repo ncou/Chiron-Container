@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Chiron\Tests\Container;
 
 use Chiron\Container\Container;
-use Chiron\Container\ContainerInterface;
+use Psr\Container\ContainerInterface;
 use PHPUnit\Framework\TestCase;
 
 class ContainerTest extends TestCase
@@ -16,7 +16,7 @@ class ContainerTest extends TestCase
     public function testContainerAddsAndGetsSharedByDefault()
     {
         $container = (new Container())->defaultToShared();
-        $container->add(Foo::class);
+        $container->bind(Foo::class);
 
         $this->assertTrue($container->has(Foo::class));
 
@@ -34,7 +34,7 @@ class ContainerTest extends TestCase
     public function testContainerAddsNonSharedWithSharedByDefault()
     {
         $container = (new Container())->defaultToShared();
-        $container->add(Foo::class, null, false);
+        $container->bind(Foo::class, null, false);
 
         $this->assertTrue($container->has(Foo::class));
 
@@ -46,37 +46,36 @@ class ContainerTest extends TestCase
         $this->assertNotSame($fooOne, $fooTwo);
     }
 
+    public function testBound()
+    {
+        $container = new Container();
+
+        $container->bind(ContainerTestRenderable::class, new ContainerTestXmlRenderer());
+
+        static::assertTrue($container->bound(ContainerTestRenderable::class)); // set by instance
+        static::assertFalse($container->bound(ContainerTestJsonRenderer::class)); // class true
+    }
+
     public function testHas()
     {
         $container = new Container();
 
-        $container->add(ContainerTestRenderable::class, new ContainerTestXmlRenderer());
+        $container->bind(ContainerTestRenderable::class, new ContainerTestXmlRenderer());
 
         static::assertTrue($container->has(ContainerTestRenderable::class)); // set by instance
         static::assertTrue($container->has(ContainerTestJsonRenderer::class)); // class true
         static::assertFalse($container->has(ContainerTestServerAccessible::class)); // interface false
-        static::assertFalse($container->has(ContainerTestHttpController::class));
         static::assertFalse($container->has('Unknown\\Class')); // not defined class
-
-        // "has" map to offsetExists
-        static::assertTrue(isset($container[ContainerTestRenderable::class]));
-        static::assertTrue(isset($container[ContainerTestJsonRenderer::class]));
-        static::assertFalse(isset($container[ContainerTestServerAccessible::class]));
-        static::assertFalse(isset($container[ContainerTestHttpController::class]));
-        static::assertFalse(isset($container['Unknown\\Class']));
     }
 
     public function testHasNull()
     {
         $container = new Container();
 
-        $container->add('null', null);
+        $container->bind('null', null);
 
         static::assertTrue($container->has('null')); // container has null,
         static::assertFalse($container->has('undefined'));
-
-        static::assertTrue(isset($container['null']));
-        static::assertFalse(isset($container['undefined']));
     }
 
     /*
@@ -90,54 +89,49 @@ class ContainerTest extends TestCase
 
             static::assertSame($xml, $container->get('xml'));
             static::assertSame(true, $container->get('is_debug'));
-
-            // "get" map to offsetGet
-            static::assertSame($xml, $container['xml']);
-            static::assertSame(true, $container['is_debug']);
         }
     */
 
     public function testClosure()
     {
         $container = new Container();
-        $container->add(ContainerInterface::class, $container);
 
-        $container->add(ContainerTestRenderable::class, $renderer = new ContainerTestXmlRenderer());
-        $container->share(ContainerTestHttpController::class, function (ContainerInterface $app) {
-            return new ContainerTestHttpController($app[ContainerTestRenderable::class], [
+        $container->bind(ContainerTestRenderable::class, $renderer = new ContainerTestXmlRenderer());
+        $container->singleton(ContainerTestHttpController::class, function (ContainerInterface $app) {
+            return new ContainerTestHttpController($app->get(ContainerTestRenderable::class), [
                 'username' => 'username string',
                 'password' => 'password string',
             ]);
         });
 
-        static::assertInstanceOf(ContainerTestHttpController::class, $container[ContainerTestHttpController::class]);
-        static::assertSame($container[ContainerTestHttpController::class], $container[ContainerTestHttpController::class]);
-        static::assertSame($renderer, $container[ContainerTestHttpController::class]->renderer);
+        static::assertInstanceOf(ContainerTestHttpController::class, $container->get(ContainerTestHttpController::class));
+        static::assertSame($container->get(ContainerTestHttpController::class), $container->get(ContainerTestHttpController::class));
+        static::assertSame($renderer, $container->get(ContainerTestHttpController::class)->renderer);
         static::assertEquals([
             'username' => 'username string',
             'password' => 'password string',
-        ], $container[ContainerTestHttpController::class]->config);
+        ], $container->get(ContainerTestHttpController::class)->config);
     }
 
     public function testClosureWithTypeHint()
     {
         $container = new Container();
 
-        $container->add(ContainerTestRenderable::class, $renderer = new ContainerTestXmlRenderer());
-        $container->share(ContainerTestHttpController::class, function (ContainerTestRenderable $renderable) {
+        $container->bind(ContainerTestRenderable::class, $renderer = new ContainerTestXmlRenderer());
+        $container->singleton(ContainerTestHttpController::class, function (ContainerTestRenderable $renderable) {
             return new ContainerTestHttpController($renderable, [
                 'username' => 'username string',
                 'password' => 'password string',
             ]);
         });
 
-        static::assertInstanceOf(ContainerTestHttpController::class, $container[ContainerTestHttpController::class]);
-        static::assertSame($container[ContainerTestHttpController::class], $container[ContainerTestHttpController::class]);
-        static::assertSame($renderer, $container[ContainerTestHttpController::class]->renderer);
+        static::assertInstanceOf(ContainerTestHttpController::class, $container->get(ContainerTestHttpController::class));
+        static::assertSame($container->get(ContainerTestHttpController::class), $container->get(ContainerTestHttpController::class));
+        static::assertSame($renderer, $container->get(ContainerTestHttpController::class)->renderer);
         static::assertEquals([
             'username' => 'username string',
             'password' => 'password string',
-        ], $container[ContainerTestHttpController::class]->config);
+        ], $container->get(ContainerTestHttpController::class)->config);
     }
 
     public function testAlias()
@@ -145,14 +139,14 @@ class ContainerTest extends TestCase
         $container = new Container();
         $renderer = new ContainerTestXmlRenderer();
 
-        $container->add(ContainerTestRenderable::class, $renderer);
+        $container->bind(ContainerTestRenderable::class, $renderer);
 
         $container->alias('myalias', ContainerTestRenderable::class);
         $container->alias('otheralias', 'myalias');
 
-        static::assertSame($renderer, $container[ContainerTestRenderable::class]);
-        static::assertSame($renderer, $container['myalias']);
-        static::assertSame($renderer, $container['otheralias']);
+        static::assertSame($renderer, $container->get(ContainerTestRenderable::class));
+        static::assertSame($renderer, $container->get('myalias'));
+        static::assertSame($renderer, $container->get('otheralias'));
     }
 
     public function testGetByCreate()
@@ -188,7 +182,7 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $container->share(Bar::class);
+        $container->singleton(Bar::class);
 
         $counter = 0;
         $container->inflector(Bar::class,
@@ -217,14 +211,58 @@ class ContainerTest extends TestCase
         $container->get('unknown');
     }
 
+    /**
+     * @expectedException Chiron\Container\Exception\EntityNotFoundException
+     * @expectedExceptionMessage Service 'unknown' wasn't found in the dependency injection container
+     */
+    public function testGetAliasFail()
+    {
+        $container = new Container();
+        $container->alias('fail', 'unknown');
+
+        $container->get('fail');
+    }
+
+
     public function testGetAlias()
     {
         $container = new Container();
-        $container->alias('foo', 'ConcreteStub');
-        $this->assertEquals($container->getAlias('foo'), 'ConcreteStub');
-        $this->assertTrue($container->isAlias('foo'));
-        $this->assertFalse($container->isAlias('bar'));
+
+        $function = function () { return rand();};
+
+        $shared = false;
+        $container->bind('randomFunction', $function, $shared);
+        $container->alias('rand', 'randomFunction');
+
+        $this->assertNotEquals($container->get('rand'), $container->get('rand'));
     }
+
+    public function testGetAliasSingletonClosure()
+    {
+        $container = new Container();
+
+        $function = function () { return rand();};
+
+        $shared = true;
+        $container->bind('randomFunction', $function, $shared);
+        $container->alias('rand', 'randomFunction');
+
+        $this->assertEquals($container->get('rand'), $container->get('rand'));
+    }
+
+
+    public function testGetAliasSingletonClass()
+    {
+        $container = new Container();
+
+        $bar = new Bar();
+        $container->singleton(Bar::class, $bar);
+
+        $container->alias('foo', Bar::class);
+
+        $this->assertEquals($container->get('foo'), $bar);
+    }
+
 
     /**
      * @deprecated use catchException

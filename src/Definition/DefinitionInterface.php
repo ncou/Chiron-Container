@@ -4,21 +4,23 @@ declare(strict_types=1);
 
 namespace Chiron\Container\Definition;
 
+use Chiron\Container\Container;
+
 interface DefinitionInterface
 {
     /**
-     * Set the alias of the definition.
+     * Set the name of the definition.
      *
-     * @param string $id
+     * @param string $name
      */
-    public function setAlias(string $id): DefinitionInterface;
+    public function setName(string $name): DefinitionInterface;
 
     /**
-     * Get the alias of the definition.
+     * Get the name of the definition.
      *
      * @return string
      */
-    public function getAlias(): string;
+    public function getName(): string;
 
     /**
      * Set whether this is a shared definition.
@@ -69,4 +71,14 @@ interface DefinitionInterface
      * @return self
      */
     public function addArguments(array $args): DefinitionInterface;
+
+     /**
+     * Resolve the concrete using the container.
+     *
+     * @param Container $container
+     * @param bool $new
+     *
+     * @return mixed
+     */
+    public function resolve(Container $container, bool $new);
 }

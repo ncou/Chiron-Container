@@ -17,64 +17,68 @@ use InvalidArgumentException;
 use Psr\Container\ContainerInterface;
 use LogicException;
 
-// TODO : remonter la classe Reference à la racine du Container car ce n'est pas une définition !!!!! Eventuellement la déplacer dans un répertoire "Argument" ou "Support"
-use Chiron\Container\Definition\Reference;
+use Chiron\Injector\Injector;
+
+//https://github.com/symfony/symfony/blob/4dd6e2f0b2daefc2bddd08aa056370afb1c1cb1d/src/Symfony/Component/DependencyInjection/Container.php#L236
+//https://github.com/symfony/symfony/blob/master/src/Symfony/Component/DependencyInjection/Container.php#L309
+
+//https://github.com/illuminate/container/blob/master/Container.php
 
 // TODO : créer une méthode singleton() ou share() => https://github.com/illuminate/container/blob/master/Container.php#L354
 // https://github.com/thephpleague/container/blob/master/src/Container.php#L92
 //https://github.com/mrferos/di/blob/master/src/Container.php#L99
 
+
+//https://github.com/spiral/core/blob/master/src/Container.php
+//https://github.com/thephpleague/container/blob/master/src/Container.php
+//https://github.com/yiisoft/di/blob/master/src/Container.php
+
+
 // TODO : améliorer le Circular exception avec le code : https://github.com/symfony/dependency-injection/blob/master/Container.php#L236
 
-// TODO : passer la classe en final, et passer les fonctions protected en private.
 // TODO : ajouter une méthode "removeBinding($serviceName)" et la rajouter dans la classe BindingInterface  => https://github.com/spiral/core/blob/master/src/Container.php#L354
 
 /**
  * Container implements a [dependency injection](http://en.wikipedia.org/wiki/Dependency_injection) container.
  */
-// TODO : lui ajouter un InvokerInterface + ajouter la méthode call (ou invoker) et make (ou build) en public directement dans cette classe Container::class
-class Container implements ContainerInterface, BindingInterface, FactoryInterface
+final class Container implements ContainerInterface, BindingInterface, FactoryInterface, InvokerInterface
 {
-    /**
-     * The current globally available container (if any).
-     *
-     * @var static
-     */
+    /** @var static */
+    // TODO : faire une méthode getInstance (qui retournerai l'instance du container ou null si on n'a pas appellé la méthode setAsGlobal) ???? ca éviterai d'avoir une propriété public dans la classe. On pourrait même lever une exception si le container n'est pas initialisé et qu'on fait l'appel à la méthode getInstance !!!!
     public static $instance;
 
-    /**
-     * @var bool
-     */
-    protected $defaultToShared = false;
+    /** @var Injector */
+    private $injector;
 
     /** @var \Chiron\Container\Definition[] */
-    protected $definitions = [];
+    // TODO : on devrait pas renommer ce tableau en "bindings" ?
+    private $definitions = [];
 
     /** @var \Chiron\Container\Inflector[] */
-    protected $inflectors = [];
+    private $inflectors = [];
 
     /** @var array */
-    protected $services = [];
+    private $services = [];
 
     /** @var array */
-    //protected $aliases = [];
+    private $entriesBeingResolved = [];
 
-    /** @var ReflectionResolver */
-    protected $resolver;
+    /** @var bool */
+    private $defaultToShared = false;
 
+    /**
+     * Container constructor.
+     */
     public function __construct()
     {
-        // TODO : créer une méthode getResolver() dans cette classe.
-        $this->resolver = new ReflectionResolver($this);
+        $this->injector = new Injector($this);
 
         // TODO : ajouter un PHPunit pour vérifier si ces 4 classes sont bien ajoutées à la construction.
-        // TODO : attention si on utilise ce bout de code, il faudra aussi faire une méthode __clone() qui remodifie ces valeurs d'instances. => https://github.com/Wandu/Framework/blob/master/src/Wandu/DI/Container.php#L65
-        $this->share(Container::class, $this);
-        $this->share(ContainerInterface::class, $this);
-        $this->share(FactoryInterface::class, $this);
-        $this->share(BindingInterface::class, $this);
-
-        // TODO : ajouter un binding sur FactoryInterface et sur InvokerInterface
+        $this->singleton(Container::class, $this);
+        $this->singleton(ContainerInterface::class, $this);
+        $this->singleton(BindingInterface::class, $this);
+        $this->singleton(FactoryInterface::class, $this);
+        $this->singleton(InvokerInterface::class, $this);
     }
 
     /**
@@ -82,6 +86,7 @@ class Container implements ContainerInterface, BindingInterface, FactoryInterfac
      */
     public function __clone()
     {
+        // TODO : il faudrait pas lever une ContainerException plutot ????
         throw new LogicException('Container is not clonable');
     }
 
@@ -92,24 +97,11 @@ class Container implements ContainerInterface, BindingInterface, FactoryInterfac
      *
      * @return self
      */
-    public function defaultToShared(bool $shared = true): ContainerInterface
+    public function defaultToShared(bool $shared = true): self
     {
         $this->defaultToShared = $shared;
 
         return $this;
-    }
-
-    /**
-     * Allows for manipulation of specific types on resolution.
-     *
-     * @param string   $type     represent the class name
-     * @param callable $callback
-     *
-     * @return InflectorInterface
-     */
-    public function inflector(string $type, callable $callback): InflectorInterface
-    {
-        return $this->inflectors[] = new Inflector($type, $callback);
     }
 
 
@@ -122,79 +114,175 @@ class Container implements ContainerInterface, BindingInterface, FactoryInterfac
         }
     */
 
-    /**
-     * Determine if the given abstract type has been bound.
-     *
-     * @param string $abstract
-     *
-     * @return bool
-     */
-    /*
-    //https://github.com/illuminate/container/blob/master/Container.php#L158
-    public function bound($abstract)
-    {
-        return isset($this->bindings[$abstract]) ||
-               isset($this->instances[$abstract]) ||
-               $this->isAlias($abstract);
-    }*/
-    /**
-     *  {@inheritdoc}
-     */
-    /*
-    public function has($id)
-    {
-        return $this->bound($id);
-    }*/
 
-    // TODO : on devrait pas retourner un DefinitionInterface ? cad faire un return du singleton() ????
-    public function alias(string $alias, string $target): void
+
+
+
+    public function alias(string $alias, string $target): DefinitionInterface
     {
-        $this->share($alias, Reference::to($target));
+        return $this->bind($alias, Reference::to($target));
     }
 
     /**
-     * Proxy to add with shared as true.
+     * Proxy to bind with shared as true.
      *
-     * @param string $id
+     * @param string $name
      * @param mixed  $concrete
      *
-     * @return \League\Container\Definition\DefinitionInterface
+     * @return DefinitionInterface
      */
-    // TODO : méthode à renommer en "singleton()"
-    public function share(string $id, $concrete = null): DefinitionInterface
+    public function singleton(string $name, $concrete = null): DefinitionInterface
     {
-        return $this->add($id, $concrete, true);
+        return $this->bind($name, $concrete, true);
     }
 
     /**
-     * Add an item to the container.
+     * Register a binding with the container.
      *
-     * @param string $id
+     * @param string $name
      * @param mixed  $concrete
      * @param bool   $shared
      *
-     * @return \League\Container\Definition\DefinitionInterface
+     * @return DefinitionInterface
      */
-    public function add(string $id, $concrete = null, bool $shared = null): DefinitionInterface
+    // TODO : ajouter une vérif (et lever une erreur) sur le binding d'un service qui est déjà initialisé : https://github.com/symfony/symfony/blob/4dd6e2f0b2daefc2bddd08aa056370afb1c1cb1d/src/Symfony/Component/DependencyInjection/Container.php#L172           +                   https://github.com/symfony/symfony/blob/4dd6e2f0b2daefc2bddd08aa056370afb1c1cb1d/src/Symfony/Component/DependencyInjection/Container.php#L293
+    // TODO : vérifier le type de concréte qu'on veut binder. exemple : https://github.com/yiisoft/di/blob/master/src/Container.php#L168
+    public function bind(string $name, $concrete = null, bool $shared = null): DefinitionInterface
     {
-        // handle special case when the $id is the interface name and the $concrete the real class.
-        // TODO : bout de code à virer si on recherche directement avec le getAlias du definition
+        // handle special case when the $name is the interface name and the $concrete the real class.
+        // TODO : bout de code à virer si on vérifie que les string qui ne sont pas des noms de classes lévent une erreur.
         if (is_string($concrete) && class_exists($concrete)) {
-            $this->alias($concrete, $id);
+            $this->alias($concrete, $name);
         }
 
-        $concrete = $concrete ?? $id;
+        $concrete = $concrete ?? $name;
         $shared = $shared ?? $this->defaultToShared;
 
         if (! $concrete instanceof DefinitionInterface) {
-            $concrete = new Definition($id, $concrete);
+            $concrete = new Definition($name, $concrete);
         }
 
-        $this->definitions[$id] = $concrete
-            ->setAlias($id)
+        $this->definitions[$name] = $concrete
+            ->setName($name)
             ->setShared($shared);
 
         return $concrete;
+    }
+
+    /**
+     * Allows for manipulation of specific types on resolution.
+     *
+     * @param string   $type     represent the class name
+     * @param callable $callback
+     *
+     * @return InflectorInterface
+     */
+    // TODO : renommer en mutation ou en interceptor ? avec une méthode qui s'execute soit respectivement "mutate()" ou "proceed()"
+    public function inflector(string $type, callable $callback): InflectorInterface
+    {
+        return $this->inflectors[] = new Inflector($type, $callback);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    // TODO : lever une exception si le paramétre $name n'est pas de type string !!!!
+    public function get($name, bool $new = false)
+    {
+
+        // TODO éventuellement optimiser le code en faisant un truc du genre :
+        // GET -> reporter la gestion u array $services dans la classe définition sous le nom $resolved, et avoir seulement dans cette méthode Get() deux appels : un appel à autowire() si isbound === false, et ensuite à resolve() qui prend en paramétre la définition. Cela correspond à lla fin du code (avec la vérif sur les exceptions circulaires).
+
+// **** Code à déporter dans la classe Definition
+        if (array_key_exists($name, $this->services) && $new === false) {
+            return $this->services[$name];
+        }
+
+        // TODO : externaliser ce bout de code dans une méthode privée, qui bind si besoin l'objet dans le container. exemple de nom : assertBinding()
+        // TODO : externaliser dans une méthode nommée "autowire", mais qui se charge de retourner directement l'instance en faisant un appel à la méthode "make" => https://github.com/spiral/core/blob/86ffeac422f2f368a890ccab71cf6a8b20668176/src/Container.php#L145
+        // TODO : exemple en faisant 2 fois la vérification sur le isBound === true         https://github.com/slince/di/blob/master/Container.php#L197
+        // handle the case when you want to resolve a classname not already binded in the container.
+        if (! $this->bound($name)) {
+
+// **** Code à mettre dans autowire()
+
+            // TODO : il faudrait faire un test d'enlever cette vérification que la classe existe, car même si on bind une classe qui n'existe pas il doit bien il y avoir un test plus tard pour vérifier ce cas là !!!! Ou alors cela va retourner une simple chaine de caractéres ???? faire le test de ce cas là ca sera plus simple...
+            if (! class_exists($name)) {
+                // TODO : utiliser la fonction levenshtein pour afficher les services le plus proche du nom du service recherché ?     https://github.com/symfony/dependency-injection/blob/b4f099e65175874bd326ec9a86d6df57a217a6a4/Container.php#L268
+                throw new EntityNotFoundException("Service '$name' wasn't found in the dependency injection container");
+            }
+            // if the class to build in an instanceof SingletonInterface, we force the share parameter at true.
+            $share = is_subclass_of($name, SingletonInterface::class) ? true : null;
+            $this->bind($name, null, $share);
+        }
+
+        $definition = $this->definitions[$name];
+
+// **** Code à mettre dans resolve($definition)
+
+
+        $entryName = $definition->getName();
+
+        // TODO : améliorer la gestion des exceptions circulaires en affichant dans l'exception l'ensemble des classes initialisée précédemment comme ca on retrouvera l'origine de l'appel (cad la 1ere classe qu'on essaye de résoudre via le get !!!!)
+        // Check if we are already getting this entry -> circular dependency
+        if (isset($this->entriesBeingResolved[$entryName])) {
+            // TODO : créer une DependencyException ????
+            throw new ContainerException(sprintf(
+                'Circular dependency detected while trying to resolve entry "%s"',
+                $entryName
+            ));
+        }
+        $this->entriesBeingResolved[$entryName] = true;
+
+        try {
+            $resolved = $definition->resolve($this, $new);
+            // Let's start the mutations !
+            $mutated = $this->mutate($resolved);
+        } finally {
+            unset($this->entriesBeingResolved[$entryName]);
+        }
+
+// **** Code à déporter dans la classe Definition
+        // handle the singleton case
+        if ($definition->isShared() && $new === false) {
+            $this->services[$name] = $mutated;
+        }
+
+        return $mutated;
+    }
+
+    /**
+     * Apply mutations to an object. If no mutation found, return original object.
+     *
+     * @param object $target The object to mutate.
+     *
+     * @return object The mutated object or the original object if no mutation found
+     */
+    // TODO : passer la version miniame de PHP à 7.3 car on est en train d'utiliser le typehint "object" qui est introduit seulement depuis PHP7.3
+    // TODO : améliorer le code : https://github.com/auraphp/Aura.Di/blob/4.x/src/Resolver/Blueprint.php#L114
+    private function mutate(object $target): object
+    {
+        foreach ($this->inflectors as $inflector) {
+            $type = $inflector->getType();
+
+            if (! $target instanceof $type) {
+                continue;
+            }
+
+            // TODO : il faudrait pas que l'on stocke le retour de cette appel dans $target, pour gérer le cas des objets immuables. Et il faudrait dans ce cas revérifier que le type de retour est bien toujours le même type d'object qu'on a recu en entrée.
+            call_user_func($inflector->getCallback(), $target);
+        }
+
+        // TODO : il faudrait pas faire une vérification que l'instance mutée est bien du même type d'objet que celui qu'on a eu en entrée de la fonction ? cela évitera que la mutation retourne un autre type d'objet, ce n'est pas le but de la mutation !!!!
+        return $target;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function has($name): bool
+    {
+        return $this->bound($name) || class_exists($name);
     }
 
     /**
@@ -206,111 +294,44 @@ class Container implements ContainerInterface, BindingInterface, FactoryInterfac
      */
     public function extend(string $name): DefinitionInterface
     {
-        //$name = $this->getAlias($name);
-
-        if (! array_key_exists($name, $this->definitions)) {
+        if (! $this->bound($name)) {
             throw new EntityNotFoundException("Service '$name' is not managed as a definition in the container");
         }
 
         return $this->definitions[$name];
     }
 
-    // TODO : renommer la méthode en bound()
-    public function isBinded(string $id): bool
-    {
-        return isset($this->definitions[$id]);
-        //return array_key_exists($id, $this->definitions);
-    }
-
-    // TODO : renommer en removeBinding() ????
-    public function unbind(string $id)
-    {
-        unset($this->definitions[$id]);
-    }
-
-
-    // TODO : améliorer le code, à quoi sert la vérification dans $this->services car si il existe une instance partagée dans ce tableau, elle est forcément présente dans le tableau précédent $this->definitions.
-    // TODO : vérifier si l'ajout de la classe via $this->add() est vraiment nécessaire !!!!
-    // TODO : faire uniquement un test sur class_exist($id) || isset($this->definitions[$id])
-    public function has($id)
-    {
-        /*
-        if (! isset($this->definitions[$id]) && class_exists($id)) {
-            $this->add($id);
-        }
-
-        return isset($this->definitions[$id]);// || isset($this->services[$id]);// || $this->isAlias($id);
-        */
-
-        return $this->isBinded($id) || class_exists($id);
-    }
-
     /**
-     * {@inheritdoc}
+     * Determine if the given abstract type has been bound.
+     *
+     * @param string $abstract
+     *
+     * @return bool
      */
-    // return mixed
-    public function get($name, bool $new = false)
+    public function bound(string $name): bool
     {
-        // resolve alias
-        //$name = $this->getAlias($name);
-
-        if (array_key_exists($name, $this->services) && $new === false) {
-            return $this->services[$name];
-        }
-
-        // handle the case when you want to resolve a classname not already binded in the container.
-        if (! array_key_exists($name, $this->definitions)) {
-            if (! class_exists($name)) {
-                // TODO : utiliser la fonction levenshtein pour afficher les services le plus proche du nom du service recherché ?     https://github.com/symfony/dependency-injection/blob/b4f099e65175874bd326ec9a86d6df57a217a6a4/Container.php#L268
-                throw new EntityNotFoundException("Service '$name' wasn't found in the dependency injection container");
-            }
-            // if the class to build in an instanceof SingletonInterface, we force the share parameter at true.
-            $share = is_subclass_of($name, SingletonInterface::class) ? true : null;
-            $this->add($name, null, $share);
-        }
-
-        $definition = $this->definitions[$name];
-        //$definition = $this->getDefinition($name);
-
-        $resolved = $this->resolver->resolveDefinition($definition);
-        //$resolved = $this->resolver->resolve($definition->getConcrete(), $definition->getAssigns());
-        //$instance = $this->resolver->resolve($definition->getConcrete(), $this->convertAssign($definition->assigns));
-
-        $resolved = $this->inflect($resolved);
-
-        // singleton
-        if ($definition->isShared() && $new === false) {
-            $this->services[$name] = $resolved;
-        }
-
-        return $resolved;
+        return isset($this->definitions[$name]);
+        //return array_key_exists($name, $this->definitions);
     }
 
-    /**
-     * Apply inflections to an object.
-     *
-     * @param object $object
-     *
-     * @return object
-     */
-    protected function inflect($object)
+    // TODO : utilité de la méthode ????
+    // TODO : renommer en removeBinding() ???? ou plutot en remove() et ca se chargerai de supprimer un binding, un singleton ou un alias car c'est tout dans le même tableau "$this->definitions"
+    // TODO : retourner un booléen si le unbinding s'est bien passé ? ou alors rester sur un void ?
+    // TODO : on devrait pas faire un test "isbound === true" avant de faire le unset ? et lever une exception si on essaye d'enlever un service qui n'est pas bindé !!!
+    public function remove(string $name): void
     {
-        foreach ($this->inflectors as $inflector) {
-            $type = $inflector->getType();
-
-            if (! $object instanceof $type) {
-                continue;
-            }
-
-            call_user_func($inflector->getCallback(), $object);
-        }
-
-        return $object;
+        unset($this->definitions[$name]);
     }
+
+
+
+
+
+
 
     // TODO : méthode à virer !!!!
     /*
-    protected function convertAssign(array $arguments): array
+    private function convertAssign(array $arguments): array
     {
         $argumentsToReturn = [];
         foreach ($arguments as $key => $value) {
@@ -341,10 +362,30 @@ class Container implements ContainerInterface, BindingInterface, FactoryInterfac
     // TODO : renommer en buildClass() ???? ou plutot en "make()" ????
     // TODO : améliorer le Circular exception avec le code : https://github.com/symfony/dependency-injection/blob/master/Container.php#L236
     // TODO : renommmer la fonction en make() et ajouter ce nom de fonction dans l'interface FactoryInterface
+    // return mixed
     public function build(string $className, array $arguments = [])
     {
-        //return $this->resolver->resolve($className, $arguments);
-        return $this->resolver->build($className, $arguments);
+        // TODO : il faudrait pas convertir les exceptions remontées par cette fonction "build" en ContainerException ???? faire un try/catch et change le type de l'exception ????
+        // TODO : il faudrait vérifier que le $className est bien une classe qui existe !!!! is_class()
+        // TODO : il faudra appliquer les mutations enregistrées pour cette classe une fois qu'on a fait le build. $this->mutate($instance);
+        // TODO : il faudra surement améliorer le message des références circulaires, car on il faudra indiquer que le point d'entrée est la tentative de résolution de $className
+        return $this->injector->build($className, $arguments);
+
+    }
+
+    // return mixed
+    // TODO : ne surtout PAS forcer le typehint à callable car il serait possible de faire un CallableResolver avant, non ????
+    public function invoke(callable $callable, array $arguments = [])
+    {
+        // TODO : il faudra surement améliorer le message des références circulaires, car on il faudra indiquer que le point d'entrée est la tentative de résolution de $callable
+        // TODO : il faudrait pas convertir les exceptions remontées par cette fonction "build" en ContainerException ???? faire un try/catch et change le type de l'exception ????
+        return $this->injector->invoke($callable, $arguments);
+    }
+
+    // Méthode à virer c'est pour faire tourner les tests.
+    public function call(callable $callable, array $arguments = [])
+    {
+        return $this->invoke($callable, $arguments);
     }
 
     /*******************************************************************************
@@ -391,5 +432,93 @@ class Container implements ContainerInterface, BindingInterface, FactoryInterfac
 
         return $previous;
     }
+
+    /**
+     * Register a binding if it hasn't already been registered.
+     *
+     * @param  string  $abstract
+     * @param  \Closure|string|null  $concrete
+     * @param  bool  $shared
+     * @return void
+     */
+    /*
+    public function bindIf($abstract, $concrete = null, $shared = false)
+    {
+        if (! $this->bound($abstract)) {
+            $this->bind($abstract, $concrete, $shared);
+        }
+    }*/
+
+    /**
+     * Register a shared binding if it hasn't already been registered.
+     *
+     * @param  string  $abstract
+     * @param  \Closure|string|null  $concrete
+     * @return void
+     */
+    /*
+    public function singletonIf($abstract, $concrete = null)
+    {
+        if (! $this->bound($abstract)) {
+            $this->singleton($abstract, $concrete);
+        }
+    }*/
+
+
+    /**
+     * Wrap the given closure such that its dependencies will be injected when executed.
+     *
+     * @param  \Closure  $callback
+     * @param  array  $parameters
+     * @return \Closure
+     */
+    /*
+    public function wrap(Closure $callback, array $parameters = [])
+    {
+        return function () use ($callback, $parameters) {
+            return $this->call($callback, $parameters);
+        };
+    }*/
+
+
+    /**
+     * Get a closure to resolve the given type from the container.
+     *
+     * @param  string  $abstract
+     * @return \Closure
+     */
+    /*
+    public function factory($abstract)
+    {
+        return function () use ($abstract) {
+            return $this->make($abstract);
+        };
+    }*/
+
+    /**
+     * Get the container's bindings.
+     *
+     * @return array
+     */
+    /*
+    public function getBindings()
+    {
+        return $this->bindings;
+    }*/
+
+    /**
+     * Flush the container of all bindings and resolved instances.
+     *
+     * @return void
+     */
+    /*
+    public function flush()
+    {
+        $this->aliases = [];
+        $this->resolved = [];
+        $this->bindings = [];
+        $this->instances = [];
+        $this->abstractAliases = [];
+    }*/
 
 }

@@ -16,14 +16,14 @@ class SingletonTest extends TestCase
     public function testSingletonInstance(): void
     {
         $container = new Container();
-        $container->share('sampleClass', $instance = new SampleClass());
+        $container->singleton('sampleClass', $instance = new SampleClass());
         $this->assertSame($instance, $container->get('sampleClass'));
     }
 
     public function testSingletonToItself(): void
     {
         $container = new Container();
-        $container->share(SampleClass::class, SampleClass::class);
+        $container->singleton(SampleClass::class, SampleClass::class);
 
         $sc = $container->get(SampleClass::class);
         $this->assertSame($sc, $container->get(SampleClass::class));
@@ -32,7 +32,7 @@ class SingletonTest extends TestCase
     public function testSingletonInstanceWithAlias(): void
     {
         $container = new Container();
-        $container->share('sampleClass', $instance = new SampleClass());
+        $container->singleton('sampleClass', $instance = new SampleClass());
         $container->alias('binding', 'sampleClass');
 
         $this->assertSame($instance, $container->get('sampleClass'));
@@ -45,7 +45,7 @@ class SingletonTest extends TestCase
 
         $instance = new SampleClass();
 
-        $container->share('sampleClass', function () use ($instance) {
+        $container->singleton('sampleClass', function () use ($instance) {
             return $instance;
         });
 
@@ -56,7 +56,7 @@ class SingletonTest extends TestCase
     {
         $container = new Container();
 
-        $container->share('sampleClass', function () {
+        $container->singleton('sampleClass', function () {
             return new SampleClass();
         });
 
@@ -70,7 +70,7 @@ class SingletonTest extends TestCase
     {
         $container = new Container();
 
-        $container->share('sampleClass', Closure::fromCallable([self::class, 'sampleClass']));
+        $container->singleton('sampleClass', Closure::fromCallable([self::class, 'sampleClass']));
 
         $instance = $container->get('sampleClass');
 
@@ -82,7 +82,7 @@ class SingletonTest extends TestCase
     {
         $container = new Container();
 
-        $container->share('sampleClass', function () {
+        $container->singleton('sampleClass', function () {
             return new SampleClass();
         });
         $container->alias('singleton', 'sampleClass');

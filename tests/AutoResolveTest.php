@@ -6,6 +6,7 @@ namespace Chiron\Tests\Container;
 
 use Chiron\Container\Container;
 use PHPUnit\Framework\TestCase;
+use InvalidArgumentException;
 
 class AutoResolveTest extends TestCase
 {
@@ -13,7 +14,7 @@ class AutoResolveTest extends TestCase
     {
         $container = new Container();
 
-        $container->share(AutoResolveTestSimpleInterface::class, AutoResolveTestSimple::class);
+        $container->singleton(AutoResolveTestSimpleInterface::class, AutoResolveTestSimple::class);
 
         $instance1 = $container->get(AutoResolveTestSimple::class);
         $instance2 = $container->get(AutoResolveTestSimpleInterface::class);
@@ -34,8 +35,8 @@ class AutoResolveTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\ContainerException
-     * @expectedExceptionMessage Parameter 'unknown' cannot be resolved
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage Invalid value for parameter $unknown
      */
     public function testResolveExceptionForDependency()
     {
@@ -45,8 +46,8 @@ class AutoResolveTest extends TestCase
     }
 
     /**
-     * @expectedException Chiron\Container\Exception\ContainerException
-     * @expectedExceptionMessage Parameter 'unknown' cannot be resolved
+     * @expectedException InvalidArgumentException
+     * @expectedExceptionMessage Invalid value for parameter $unknown
      */
     public function testResolveExceptionForClass()
     {

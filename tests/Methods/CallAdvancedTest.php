@@ -94,7 +94,7 @@ class CallAdvancedTest extends TestCase
     {
         $container = new Container();
 
-        $container->add(AssignTestClass::class)->assign('name', ['value' => 'foo']);
+        $container->bind(AssignTestClass::class)->assign('name', ['value' => 'foo']);
 
         $result = $container->call(AssignTestClass::class . '@getName');
         $this->assertEquals('foo', $result);

@@ -12,7 +12,7 @@ class SharedTest extends TestCase
     {
         $container = new Container();
 
-        $container->share('obj1', function () {
+        $container->singleton('obj1', function () {
             return new stdClass();
         });
 
@@ -22,7 +22,7 @@ class SharedTest extends TestCase
         static::assertSame($object1, $container['obj1']);
         static::assertSame($object1, $container['obj1']);
 
-        $container->share('obj2', function () {
+        $container->singleton('obj2', function () {
             return new stdClass();
         })->setShared(false);
 
@@ -46,7 +46,7 @@ class SharedTest extends TestCase
     {
         $container = new Container();
 
-        $container->share(SharedTestIF::class, SharedTestClass::class);
+        $container->singleton(SharedTestIF::class, SharedTestClass::class);
 
         // all same
         $object1 = $container[SharedTestIF::class];
@@ -58,7 +58,7 @@ class SharedTest extends TestCase
         $container = new Container();
 
         $container
-            ->share(SharedTestIF::class, SharedTestClass::class)
+            ->singleton(SharedTestIF::class, SharedTestClass::class)
             ->setShared(false);
         $object2 = $container[SharedTestIF::class];
 
