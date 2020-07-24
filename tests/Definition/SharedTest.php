@@ -17,24 +17,24 @@ class SharedTest extends TestCase
         });
 
         // all same
-        $object1 = $container['obj1'];
-        static::assertSame($object1, $container['obj1']);
-        static::assertSame($object1, $container['obj1']);
-        static::assertSame($object1, $container['obj1']);
+        $object1 = $container->get('obj1');
+        static::assertSame($object1, $container->get('obj1'));
+        static::assertSame($object1, $container->get('obj1'));
+        static::assertSame($object1, $container->get('obj1'));
 
         $container->singleton('obj2', function () {
             return new stdClass();
         })->setShared(false);
 
-        $object2 = $container['obj2'];
+        $object2 = $container->get('obj2');
 
         // all not same
-        $object2_1 = $container['obj2'];
+        $object2_1 = $container->get('obj2');
 
         static::assertNotSame($object2, $object2_1);
         static::assertEquals($object2, $object2_1);
 
-        $object2_2 = $container['obj2'];
+        $object2_2 = $container->get('obj2');
 
         static::assertNotSame($object2, $object2_2);
         static::assertEquals($object2, $object2_2);
@@ -49,10 +49,10 @@ class SharedTest extends TestCase
         $container->singleton(SharedTestIF::class, SharedTestClass::class);
 
         // all same
-        $object1 = $container[SharedTestIF::class];
-        static::assertSame($object1, $container[SharedTestIF::class]);
-        static::assertSame($object1, $container[SharedTestIF::class]);
-        static::assertSame($object1, $container[SharedTestIF::class]);
+        $object1 = $container->get(SharedTestIF::class);
+        static::assertSame($object1, $container->get(SharedTestIF::class));
+        static::assertSame($object1, $container->get(SharedTestIF::class));
+        static::assertSame($object1, $container->get(SharedTestIF::class));
 
         // reset
         $container = new Container();
@@ -60,15 +60,15 @@ class SharedTest extends TestCase
         $container
             ->singleton(SharedTestIF::class, SharedTestClass::class)
             ->setShared(false);
-        $object2 = $container[SharedTestIF::class];
+        $object2 = $container->get(SharedTestIF::class);
 
         // all not same
-        $object2_1 = $container[SharedTestIF::class];
+        $object2_1 = $container->get(SharedTestIF::class);
 
         static::assertNotSame($object2, $object2_1);
         static::assertEquals($object2, $object2_1);
 
-        $object2_2 = $container[SharedTestIF::class];
+        $object2_2 = $container->get(SharedTestIF::class);
 
         static::assertNotSame($object2, $object2_2);
         static::assertEquals($object2, $object2_2);

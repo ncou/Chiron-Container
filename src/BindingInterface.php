@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Chiron\Container;
 
-use  Chiron\Container\Definition\DefinitionInterface;
 use Psr\Container\ContainerInterface;
-use  Chiron\Container\Inflector\InflectorInterface;
+use Chiron\Container\Inflector\InflectorInterface;
+use Chiron\Container\Definition\Definition;
 
 // TODO : nettoyer les méthodes non utilisées
 interface BindingInterface
@@ -20,17 +20,17 @@ interface BindingInterface
      * @param string $className
      * @param mixed  $value
      *
-     * @return DefinitionInterface
+     * @return Definition
      */
-    //public function instance(string $className, $value): DefinitionInterface;
+    //public function instance(string $className, $value): Definition;
 
     /**
      * @param string          $name
      * @param string|\Closure $className
      *
-     * @return DefinitionInterface
+     * @return Definition
      */
-    //public function bind(string $name, $className = null): DefinitionInterface;
+    //public function bind(string $name, $className = null): Definition;
 
     /**
      * Whether the container should default to defining shared definitions.
@@ -47,9 +47,9 @@ interface BindingInterface
      * @param string $id
      * @param mixed  $concrete
      *
-     * @return DefinitionInterface
+     * @return Definition
      */
-    public function singleton(string $id, $concrete = null): DefinitionInterface;
+    public function singleton(string $id, $concrete = null): Definition;
 
     /**
      * Add multiple definitions at once.
@@ -65,26 +65,26 @@ interface BindingInterface
      * @param mixed  $concrete
      * @param bool   $shared
      *
-     * @return DefinitionInterface
+     * @return Definition
      */
-    public function bind(string $id, $concrete = null, bool $shared = null): DefinitionInterface;
+    public function bind(string $id, $concrete = null, bool $shared = null): Definition;
 
     /**
      * @param string $alias
      * @param string $target
      *
-     * @return DefinitionInterface
+     * @return Definition
      */
-    public function alias(string $alias, string $target): DefinitionInterface;
+    public function alias(string $alias, string $target): Definition;
 
     /**
      * Get a definition to extend.
      *
-     * @param string $name
+     * @param string $id
      *
-     * @return DefinitionInterface
+     * @return Definition
      */
-    public function extend(string $name): DefinitionInterface;
+    public function extend(string $id): Definition;
 
     public function bound(string $id): bool;
 

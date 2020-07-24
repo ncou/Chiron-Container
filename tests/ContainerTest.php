@@ -203,7 +203,7 @@ class ContainerTest extends TestCase
 
     /**
      * @expectedException Chiron\Container\Exception\EntityNotFoundException
-     * @expectedExceptionMessage Service 'unknown' wasn't found in the dependency injection container
+     * @expectedExceptionMessage Service "unknown" wasn't found in the dependency injection container
      */
     public function testGetFail()
     {
@@ -213,7 +213,7 @@ class ContainerTest extends TestCase
 
     /**
      * @expectedException Chiron\Container\Exception\EntityNotFoundException
-     * @expectedExceptionMessage Service 'unknown' wasn't found in the dependency injection container
+     * @expectedExceptionMessage Service "unknown" wasn't found in the dependency injection container
      */
     public function testGetAliasFail()
     {
@@ -224,9 +224,23 @@ class ContainerTest extends TestCase
     }
 
 
-    public function testGetAlias()
+    public function testGetAliasWithDefaultContainer()
     {
         $container = new Container();
+
+        $function = function () { return rand();};
+
+        $shared = false;
+        $container->bind('randomFunction', $function, $shared);
+        $container->alias('rand', 'randomFunction');
+
+        $this->assertNotEquals($container->get('rand'), $container->get('rand'));
+    }
+
+    public function testGetAliasWithContainerDefaultToShared()
+    {
+        $container = new Container();
+        $container->defaultToShared();
 
         $function = function () { return rand();};
 
