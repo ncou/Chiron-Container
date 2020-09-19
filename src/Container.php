@@ -18,6 +18,10 @@ use LogicException;
 
 use Chiron\Injector\Injector;
 
+// TODO : container inspiré par google guice qui a une notation de méthode interessante : exemple     bind(xxx)->toInstance(xxx)
+//https://github.com/ray-di/Ray.Di
+//https://github.com/researchgate/injektor/blob/master/src/rg/injektor/
+
 //https://github.com/symfony/symfony/blob/4dd6e2f0b2daefc2bddd08aa056370afb1c1cb1d/src/Symfony/Component/DependencyInjection/Container.php#L236
 //https://github.com/symfony/symfony/blob/master/src/Symfony/Component/DependencyInjection/Container.php#L309
 
@@ -353,29 +357,38 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
     // TODO : améliorer le Circular exception avec le code : https://github.com/symfony/dependency-injection/blob/master/Container.php#L236
     // TODO : renommmer la fonction en make() et ajouter ce nom de fonction dans l'interface FactoryInterface
     // return mixed
-    public function build(string $className, array $arguments = [])
+    // TODO : ajouter le typehint pour le retour de la fonction avec "make(): object"
+    public function make(string $className, array $arguments = [])
     {
         // TODO : il faudrait pas convertir les exceptions remontées par cette fonction "build" en ContainerException ???? faire un try/catch et change le type de l'exception ????
         // TODO : il faudrait vérifier que le $className est bien une classe qui existe !!!! is_class()
         // TODO : il faudra appliquer les mutations enregistrées pour cette classe une fois qu'on a fait le build. $this->mutate($instance);
         // TODO : il faudra surement améliorer le message des références circulaires, car on il faudra indiquer que le point d'entrée est la tentative de résolution de $className
-        return $this->injector->build($className, $arguments);
+        return $this->injector->make($className, $arguments);
 
+    }
+
+    public function build(string $className, array $arguments = [])
+    {
+        return $this->make($className, $arguments);
     }
 
     // return mixed
     // TODO : ne surtout PAS forcer le typehint à callable car il serait possible de faire un CallableResolver avant, non ????
-    public function invoke(callable $callable, array $arguments = [])
+    // $callable can be a : callable|array|string
+    public function call($callable, array $arguments = [])
     {
         // TODO : il faudra surement améliorer le message des références circulaires, car on il faudra indiquer que le point d'entrée est la tentative de résolution de $callable
         // TODO : il faudrait pas convertir les exceptions remontées par cette fonction "build" en ContainerException ???? faire un try/catch et change le type de l'exception ????
-        return $this->injector->invoke($callable, $arguments);
+        return $this->injector->call($callable, $arguments);
     }
 
-    // Méthode à virer c'est pour faire tourner les tests.
-    public function call(callable $callable, array $arguments = [])
+    // TODO : méthode à virer !!!
+    public function invoke($callable, array $arguments = [])
     {
-        return $this->invoke($callable, $arguments);
+        // TODO : il faudra surement améliorer le message des références circulaires, car on il faudra indiquer que le point d'entrée est la tentative de résolution de $callable
+        // TODO : il faudrait pas convertir les exceptions remontées par cette fonction "build" en ContainerException ???? faire un try/catch et change le type de l'exception ????
+        return $this->call($callable, $arguments);
     }
 
     /*******************************************************************************

@@ -7,11 +7,10 @@ namespace Chiron\Container;
 interface InvokerInterface
 {
     /*
-     * @param string $className
+     * @param callable|array|string $callable
      * @param array  $arguments
      *
-     * @return object
+     * @return mixed
      */
-    // TODO : renommer la méthode en call()
-    public function invoke(callable $callable, array $arguments = []);
+    public function call($callable, array $arguments = []);
 }

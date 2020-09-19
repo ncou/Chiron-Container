@@ -12,6 +12,6 @@ interface FactoryInterface
      *
      * @return object
      */
-    // TODO : renommer la méthode en make()
-    public function build(string $className, array $arguments = []);
+    // TODO : ajouter le typehint pour le retour de la fonction avec "make(): object"
+    public function make(string $className, array $arguments = []);
 }
