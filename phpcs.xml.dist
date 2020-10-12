@@ -13,20 +13,13 @@
     <!-- Show progress of the run -->
     <arg value="p"/>
     <!-- Do not print warning -->
-    <!--<arg value="n"/>-->
+    <arg value="n"/>
     <!-- Show sniff codes in all reports -->
     <arg value="s"/>
 
     <file>src/</file>
     <file>tests/</file>
 
-    <!-- phpcs-type-sniff configuration -->   
-    <rule ref="./vendor/gskema/phpcs-type-sniff/src/Sniffs/CompositeCodeElementSniff.php">
-        <rule ref="Gskema.Sniffs.CompositeCodeElement.FqcnConstSniff">
-            <type>error</type>
-            <severity>8</severity>
-        </rule>
-    </rule>
     <!-- Load the ruleset.xml file from this folder -->
     <rule ref="Chiron"/>
 </ruleset>

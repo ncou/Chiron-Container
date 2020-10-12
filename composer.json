@@ -8,8 +8,7 @@
     "require": {
         "php": "^7.0",
         "psr/container": "^1.0",
-        "chiron/injector": "^0.2",
-        "gskema/phpcs-type-sniff": "^0.14.1"
+        "chiron/injector": "^0.2"
     },
     "require-dev": {
         "phpunit/phpunit": "^8.0",
