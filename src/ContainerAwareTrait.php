@@ -48,6 +48,6 @@ trait ContainerAwareTrait
             return $this->container;
         }
 
-        throw new UnexpectedValueException('Container not set in ' . __CLASS__);
+        throw new UnexpectedValueException('Container not set in ' . self::class);
     }
 }

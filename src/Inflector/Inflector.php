@@ -28,17 +28,11 @@ class Inflector implements InflectorInterface
         $this->callback = $callback;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getType(): string
     {
         return $this->type;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function getCallback(): callable
     {
         return $this->callback;

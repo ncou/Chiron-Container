@@ -4,19 +4,23 @@ declare(strict_types=1);
 
 namespace Chiron\Container;
 
+use Chiron\Container\Definition\Definition;
 use Chiron\Container\Exception\ContainerException;
 use Chiron\Container\Exception\EntityNotFoundException;
-use Psr\Container\ContainerExceptionInterface;
-use Chiron\Container\Definition\Definition;
 use Chiron\Container\Inflector\Inflector;
 use Chiron\Container\Inflector\InflectorInterface;
-use Chiron\Container\ServiceProvider\ServiceProviderInterface;
-use Closure;
-use InvalidArgumentException;
-use Psr\Container\ContainerInterface;
-use LogicException;
-
 use Chiron\Injector\Injector;
+use LogicException;
+use Psr\Container\ContainerInterface;
+
+
+// TODO : vérification si la classe passée en paramétre implémente bien l'interface attendue (cela peut servir pour la "mutation") mais aussi pour s'assurer qu'on bind correctement l'interface avec la classe qui est donnée dans le paramétre concréte.
+//https://github.com/ray-di/Ray.Di/blob/2.x/src/di/BindValidator.php#L57
+//https://github.com/ray-di/Ray.Di/blob/2.x/src/di/BindValidator.php#L35
+// TODO : utiliser une classe pour définir le scope singleton =>    https://github.com/ray-di/Ray.Di/blob/2.x/src/di/Scope.php#L12
+
+// TODO : vérification qu'on ne bind pas une interface à elle même =>    https://github.com/andy-shea/pulp/blob/master/lib/Binding/Binding.php#L38
+
 
 // TODO : container inspiré par google guice qui a une notation de méthode interessante : exemple     bind(xxx)->toInstance(xxx)
 //https://github.com/ray-di/Ray.Di
@@ -48,12 +52,13 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
 {
     /** @var static */
     // TODO : faire une méthode getInstance (qui retournerai l'instance du container ou null si on n'a pas appellé la méthode setAsGlobal) ???? ca éviterai d'avoir une propriété public dans la classe. On pourrait même lever une exception si le container n'est pas initialisé et qu'on fait l'appel à la méthode getInstance !!!!
+    // TODO : initialiser cette variable static à "null" ???
     public static $instance;
 
     /** @var Injector */
     private $injector;
 
-    /** @var \Chiron\Container\Definition[] */
+    /** @var \Chiron\Container\Definition\Definition[] */
     // TODO : on devrait pas renommer ce tableau en "bindings" ?
     private $definitions = [];
 
@@ -69,7 +74,7 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
     /**
      * Container constructor.
      */
-    // TODO : lui passer en paramétre un bool '$asGlobal' initialisé par défaut à false, et qui permet d'appeller la méthode ->setAsGlobal() dans ce constructeur.
+    // TODO : lui passer en paramétre un bool '$asGlobal' initialisé par défaut à true, et qui permet d'appeller la méthode ->setAsGlobal() dans ce constructeur.
     public function __construct()
     {
         $this->injector = new Injector($this);
@@ -146,9 +151,14 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
         return $target;
     }
 
-
-
-
+    /**
+     * Add an alias for an existing binding.
+     *
+     * @param string $alias
+     * @param string $target
+     *
+     * @return Definition
+     */
     public function alias(string $alias, string $target): Definition
     {
         return $this->bind($alias, Reference::to($target), false);
@@ -172,19 +182,20 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
      *
      * @param string $name
      * @param mixed  $concrete
-     * @param bool   $shared
+     * @param bool|null $shared
      *
      * @return Definition
      */
     // TODO : ajouter une vérif (et lever une erreur) sur le binding d'un service qui est déjà initialisé : https://github.com/symfony/symfony/blob/4dd6e2f0b2daefc2bddd08aa056370afb1c1cb1d/src/Symfony/Component/DependencyInjection/Container.php#L172           +                   https://github.com/symfony/symfony/blob/4dd6e2f0b2daefc2bddd08aa056370afb1c1cb1d/src/Symfony/Component/DependencyInjection/Container.php#L293
     // TODO : lever une erreur si on essaye de rebinder un service qui est de type "Privé" ou éventuellement utiliser plutot un attribut "freezed" dans la classe Definition pour indiquer qu'on ne peut pas redéfinir(cad rebinder) ce service !!!!
     // TODO : vérifier le type de concréte qu'on veut binder. exemple : https://github.com/yiisoft/di/blob/master/src/Container.php#L168
-    public function bind(string $name, $concrete = null, bool $shared = null): Definition
+    public function bind(string $name, $concrete = null, ?bool $shared = null): Definition
     {
         // handle special case when the $name is the interface name and the $concrete the real class.
         // TODO : bout de code à virer si on vérifie que les string qui ne sont pas des noms de classes lévent une erreur.
         if (is_string($concrete) && class_exists($concrete)) {
             // Attention il faut améliorer ce bout de code car en passant par la méthode 'alias()' cela force la valeur du shared à false, ce qui n'est peut etre pas le comportement attentu si l'utilisateur a mis une valeur au paramétre $shared lorsqu'il a appellé cette méthode bind() !!!!!
+            // Attention ce bout de code fonctionne car la classe utilisée pour l'alias "Reference::class" fait un get qui force l'autowire si on change ce comportement (car ce n'est pas logique pour la classe référence d'instancier une autre classe) cela va casser le code de la méthode bind. Il faudrait plutot créer une classe Autowire::class pour gérer ce cas là !!! Voir même appeller directement la méthode "$this->autowire()", par contre il faudra ajouter un paramétre shared = true/false à cette méthode !!!!
             $this->alias($concrete, $name);
         }
 
@@ -224,6 +235,8 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
     // TODO : appeller la méthode make() dans ce cas là ????
     private function autowire(string $className): void
     {
+        //assert(class_exists($class->name));
+
         // TODO : il faudrait faire un test d'enlever cette vérification que la classe existe, car même si on bind une classe qui n'existe pas il doit bien il y avoir un test plus tard pour vérifier ce cas là !!!! Ou alors cela va retourner une simple chaine de caractéres ???? faire le test de ce cas là ca sera plus simple...
         if (! class_exists($className)) {
             // TODO : utiliser la fonction levenshtein pour afficher les services le plus proche du nom du service recherché ?     https://github.com/symfony/dependency-injection/blob/b4f099e65175874bd326ec9a86d6df57a217a6a4/Container.php#L268
@@ -240,10 +253,11 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
      * Resolve the definition and apply mutations if needed.
      *
      * @param string $name
-     * @param bool $new
+     * @param bool   $new
      *
      * @return mixed The resolved and mutated object
      */
+    // TODO : renommer l'argument $new en $forceNew
     private function resolve(string $name, bool $new)
     {
         $definition = $this->definitions[$name];
@@ -286,6 +300,7 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
      *
      * @return Definition
      */
+    // TODO : utilité de la fonction ???? ou alors la renommer en getBinding() ou isBound()
     public function extend(string $name): Definition
     {
         if (! $this->bound($name)) {
@@ -302,6 +317,7 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
      *
      * @return bool
      */
+    // TODO : renommer la fonction en isBinded() ? ou hasBinding() ou getBound() ou isBound() ????
     public function bound(string $name): bool
     {
         return isset($this->definitions[$name]);
@@ -312,16 +328,11 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
     // TODO : renommer en removeBinding() ???? ou plutot en remove() et ca se chargerai de supprimer un binding, un singleton ou un alias car c'est tout dans le même tableau "$this->definitions"
     // TODO : retourner un booléen si le unbinding s'est bien passé ? ou alors rester sur un void ?
     // TODO : on devrait pas faire un test "isbound === true" avant de faire le unset ? et lever une exception si on essaye d'enlever un service qui n'est pas bindé !!!
+    // TODO : renommer la méthode en unbound()
     public function remove(string $name): void
     {
         unset($this->definitions[$name]);
     }
-
-
-
-
-
-
 
     // TODO : méthode à virer !!!!
     /*
@@ -365,7 +376,6 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
         // TODO : il faudra appliquer les mutations enregistrées pour cette classe une fois qu'on a fait le build. $this->mutate($instance);
         // TODO : il faudra surement améliorer le message des références circulaires, car on il faudra indiquer que le point d'entrée est la tentative de résolution de $className
         return $this->injector->make($className, $arguments);
-
     }
 
     public function build(string $className, array $arguments = [])
@@ -426,7 +436,7 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
     /**
      * Initialise the instance with the $this value, and return the previous instance (or null on the first call)
      *
-     * @return null|static previous instance
+     * @return static|null previous instance
      */
     // TODO : vérifier l'utilité de renvoyer le previous instance !!!
     // TODO : utilité de cette méthode si on utilise le constructeur pour définir si l'instance de cette classe doit être accessible via la variable public self::$instance.
@@ -444,6 +454,7 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
      * @param  string  $abstract
      * @param  \Closure|string|null  $concrete
      * @param  bool  $shared
+     *
      * @return void
      */
     /*
@@ -459,6 +470,7 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
      *
      * @param  string  $abstract
      * @param  \Closure|string|null  $concrete
+     *
      * @return void
      */
     /*
@@ -475,6 +487,7 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
      *
      * @param  \Closure  $callback
      * @param  array  $parameters
+     *
      * @return \Closure
      */
     /*
@@ -490,6 +503,7 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
      * Get a closure to resolve the given type from the container.
      *
      * @param  string  $abstract
+     *
      * @return \Closure
      */
     /*
@@ -525,5 +539,4 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
         $this->instances = [];
         $this->abstractAliases = [];
     }*/
-
 }

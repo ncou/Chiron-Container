@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Chiron\Tests\Container;
 
 use Chiron\Container\Container;
-use PHPUnit\Framework\TestCase;
 use InvalidArgumentException;
+use PHPUnit\Framework\TestCase;
 
 class AutoResolveTest extends TestCase
 {
@@ -36,6 +36,7 @@ class AutoResolveTest extends TestCase
 
     /**
      * @expectedException InvalidArgumentException
+     *
      * @expectedExceptionMessage Invalid value for parameter $unknown
      */
     public function testResolveExceptionForDependency()
@@ -47,6 +48,7 @@ class AutoResolveTest extends TestCase
 
     /**
      * @expectedException InvalidArgumentException
+     *
      * @expectedExceptionMessage Invalid value for parameter $unknown
      */
     public function testResolveExceptionForClass()

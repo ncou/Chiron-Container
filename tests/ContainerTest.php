@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace Chiron\Tests\Container;
 
 use Chiron\Container\Container;
-use Psr\Container\ContainerInterface;
+use Closure;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 
 class ContainerTest extends TestCase
 {
@@ -161,7 +162,8 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $container->inflector(Bar::class,
+        $container->inflector(
+            Bar::class,
             function (Bar $object) {
                 $object->setValue('foobar');
 
@@ -185,7 +187,8 @@ class ContainerTest extends TestCase
         $container->singleton(Bar::class);
 
         $counter = 0;
-        $container->inflector(Bar::class,
+        $container->inflector(
+            Bar::class,
             function (Bar $object) use (&$counter) {
                 $counter++;
             }
@@ -203,6 +206,7 @@ class ContainerTest extends TestCase
 
     /**
      * @expectedException Chiron\Container\Exception\EntityNotFoundException
+     *
      * @expectedExceptionMessage Service "unknown" wasn't found in the dependency injection container
      */
     public function testGetFail()
@@ -213,6 +217,7 @@ class ContainerTest extends TestCase
 
     /**
      * @expectedException Chiron\Container\Exception\EntityNotFoundException
+     *
      * @expectedExceptionMessage Service "unknown" wasn't found in the dependency injection container
      */
     public function testGetAliasFail()
@@ -223,12 +228,13 @@ class ContainerTest extends TestCase
         $container->get('fail');
     }
 
-
     public function testGetAliasWithDefaultContainer()
     {
         $container = new Container();
 
-        $function = function () { return rand();};
+        $function = function () {
+            return rand();
+        };
 
         $shared = false;
         $container->bind('randomFunction', $function, $shared);
@@ -242,7 +248,9 @@ class ContainerTest extends TestCase
         $container = new Container();
         $container->defaultToShared();
 
-        $function = function () { return rand();};
+        $function = function () {
+            return rand();
+        };
 
         $shared = false;
         $container->bind('randomFunction', $function, $shared);
@@ -255,7 +263,9 @@ class ContainerTest extends TestCase
     {
         $container = new Container();
 
-        $function = function () { return rand();};
+        $function = function () {
+            return rand();
+        };
 
         $shared = true;
         $container->bind('randomFunction', $function, $shared);
@@ -263,7 +273,6 @@ class ContainerTest extends TestCase
 
         $this->assertEquals($container->get('rand'), $container->get('rand'));
     }
-
 
     public function testGetAliasSingletonClass()
     {
@@ -277,7 +286,6 @@ class ContainerTest extends TestCase
         $this->assertEquals($container->get('foo'), $bar);
     }
 
-
     /**
      * @deprecated use catchException
      *
@@ -286,7 +294,7 @@ class ContainerTest extends TestCase
      * @param string   $message
      */
     // TODO : à améliorer !!!!
-    private static function assertException($expected, \Closure $closure, $message = '')
+    private static function assertException($expected, Closure $closure, $message = '')
     {
         try {
             $closure();

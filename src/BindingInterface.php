@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Chiron\Container;
 
-use Psr\Container\ContainerInterface;
-use Chiron\Container\Inflector\InflectorInterface;
 use Chiron\Container\Definition\Definition;
+use Chiron\Container\Inflector\InflectorInterface;
 
 // TODO : nettoyer les méthodes non utilisées
 interface BindingInterface
@@ -61,13 +60,13 @@ interface BindingInterface
     /**
      * Add an item to the container.
      *
-     * @param string $id
-     * @param mixed  $concrete
-     * @param bool   $shared
+     * @param string    $id
+     * @param mixed     $concrete
+     * @param bool|null $shared
      *
      * @return Definition
      */
-    public function bind(string $id, $concrete = null, bool $shared = null): Definition;
+    public function bind(string $id, $concrete = null, ?bool $shared = null): Definition;
 
     /**
      * @param string $alias

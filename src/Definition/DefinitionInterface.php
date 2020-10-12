@@ -76,7 +76,7 @@ interface DefinitionInterface
      * Resolve the concrete using the container.
      *
      * @param Container $container
-     * @param bool $new
+     * @param bool      $new
      *
      * @return mixed
      */

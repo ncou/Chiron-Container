@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Chiron\Tests\Container;
 
 use Chiron\Container\Container;
-use PHPUnit\Framework\TestCase;
 use InvalidArgumentException;
+use PHPUnit\Framework\TestCase;
 
 class NotInstantiableTest extends TestCase
 {
@@ -22,6 +22,7 @@ class NotInstantiableTest extends TestCase
 
     /**
      * @expectedException InvalidArgumentException
+     *
      * @expectedExceptionMessage Entry 'Chiron\Tests\Container\ContainerTestInterface' cannot be resolved
      */
     public function testBuildInterface()
@@ -33,6 +34,7 @@ class NotInstantiableTest extends TestCase
 
     /**
      * @expectedException InvalidArgumentException
+     *
      * @expectedExceptionMessage Entry "Chiron\Tests\Container\ContainerTestAbstract" cannot be resolved: the class is not instantiable
      */
     public function testBuildAbstractClass()
@@ -44,6 +46,7 @@ class NotInstantiableTest extends TestCase
 
     /**
      * @expectedException InvalidArgumentException
+     *
      * @expectedExceptionMessage Entry 'Chiron\Tests\Container\ContainerTestTrait' cannot be resolved
      */
     public function testBuildTrait()
@@ -55,6 +58,7 @@ class NotInstantiableTest extends TestCase
 
     /**
      * @expectedException InvalidArgumentException
+     *
      * @expectedExceptionMessage Entry "Chiron\Tests\Container\ContainerTestPrivateConstructor" cannot be resolved: the class is not instantiable
      */
     public function testBuildPrivateConstructorClass()

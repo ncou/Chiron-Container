@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Chiron\Tests\Container\Singleton;
 
+use Chiron\Container\Container;
 use Chiron\Tests\Container\Singleton\Fixtures\DeclarativeSingleton;
 use Chiron\Tests\Container\Singleton\Fixtures\SampleClass;
-use Chiron\Container\Container;
-use PHPUnit\Framework\TestCase;
 use Closure;
+use PHPUnit\Framework\TestCase;
 
 // TODO : ajouter un test A) une classe étend d'une classe abstraite qui porte l'interface singleton B) idem mais ce n'est pas une classe abstraite. => grosso modo avec le test A et B il faut vérifier si lorsqu'il y a un extend la classe mére a bien l'interface Singleton qui est interprétée correctement dans le container !!!!
 class SingletonTest extends TestCase
@@ -112,5 +112,4 @@ class SingletonTest extends TestCase
     {
         return new SampleClass();
     }
-
 }

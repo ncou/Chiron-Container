@@ -9,9 +9,9 @@ use PHPUnit\Framework\TestCase;
 
 class CircularDependencyTest extends TestCase
 {
-
     /**
      * @expectedException Chiron\Container\Exception\ContainerException
+     *
      * @expectedExceptionMessage Circular dependency detected while trying to resolve entry
      */
     public function testGetByCreateCircularDependencyFromAlias()
@@ -25,6 +25,7 @@ class CircularDependencyTest extends TestCase
 
     /**
      * @expectedException Chiron\Container\Exception\ContainerException
+     *
      * @expectedExceptionMessage Circular dependency detected while trying to resolve entry
      */
     public function testGetByCreateCircularDependencyFromAlias2()
@@ -39,6 +40,7 @@ class CircularDependencyTest extends TestCase
 
     /**
      * @expectedException Chiron\Container\Exception\ContainerException
+     *
      * @expectedExceptionMessage Circular dependency detected while trying to resolve entry
      */
     public function testGetByCreateCircularDependency()
@@ -51,6 +53,7 @@ class CircularDependencyTest extends TestCase
 
     /**
      * @expectedException Chiron\Container\Exception\ContainerException
+     *
      * @expectedExceptionMessage Circular dependency detected while trying to resolve entry
      */
     public function testGetByCreateCircularDependencyFromContainer()
@@ -67,6 +70,7 @@ class CircularDependencyTest extends TestCase
 
     /**
      * @expectedException Chiron\Container\Exception\ContainerException
+     *
      * @expectedExceptionMessage Circular dependency detected while trying to resolve entry
      */
     public function testBuildToCreateCircularDependency()
@@ -79,6 +83,7 @@ class CircularDependencyTest extends TestCase
 
     /**
      * @expectedException Chiron\Container\Exception\ContainerException
+     *
      * @expectedExceptionMessage Circular dependency detected while trying to resolve entry
      */
     public function testBuildToCreateCircularDependencyFromContainer()
@@ -95,6 +100,7 @@ class CircularDependencyTest extends TestCase
 
     /**
      * @expectedException Chiron\Container\Exception\ContainerException
+     *
      * @expectedExceptionMessage Circular dependency detected while trying to resolve entry
      */
     /*
@@ -116,6 +122,7 @@ class CircularDependencyTest extends TestCase
 
     /**
      * @expectedException Chiron\Container\Exception\ContainerException
+     *
      * @expectedExceptionMessage Circular dependency detected while trying to resolve entry
      */
     /*
