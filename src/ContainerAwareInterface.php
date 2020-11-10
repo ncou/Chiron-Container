@@ -17,7 +17,14 @@ interface ContainerAwareInterface
      *
      * @param Container $container The DI container.
      *
-     * @return mixed
+     * @return self
      */
-    public function setContainer(ContainerInterface $container);
+    public function setContainer(Container $container): self;
+
+    /**
+     * Indicates if the container is defined.
+     *
+     * @return bool
+     */
+    public function hasContainer(): bool;
 }

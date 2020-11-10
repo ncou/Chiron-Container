@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Chiron\Container;
 
-use Psr\Container\ContainerInterface;
 use UnexpectedValueException;
 
 //https://github.com/thephpleague/container/blob/master/src/ContainerAwareTrait.php
@@ -17,22 +16,32 @@ trait ContainerAwareTrait
     /**
      * DI Container.
      *
-     * @var ContainerInterface
+     * @var Container
      */
-    private $container;
+    protected $container;
 
     /**
      * Set the DI container.
      *
-     * @param ContainerInterface $container The DI container.
+     * @param Container $container The DI container.
      *
-     * @return mixed Returns itself to support chaining.
+     * @return self
      */
-    public function setContainer(ContainerInterface $container)
+    public function setContainer(Container $container): ContainerAwareInterface
     {
         $this->container = $container;
 
         return $this;
+    }
+
+    /**
+     * Indicates if the container is defined.
+     *
+     * @return bool
+     */
+    public function hasContainer(): bool
+    {
+        return $this->container instanceof Container;
     }
 
     /**
@@ -42,12 +51,12 @@ trait ContainerAwareTrait
      *
      * @return Container
      */
-    protected function getContainer(): ContainerInterface
+    protected function getContainer(): Container
     {
-        if ($this->container) {
+        if ($this->hasContainer()) {
             return $this->container;
         }
 
-        throw new UnexpectedValueException('Container not set in ' . self::class);
+        throw new UnexpectedValueException(sprintf('Container implementation not set in "%s".', static::class));
     }
 }
