@@ -158,11 +158,11 @@ class ContainerTest extends TestCase
         static::assertInstanceOf(ContainerTestJsonRenderer::class, $controller);
     }
 
-    public function testInflect()
+    public function testMutation()
     {
         $container = new Container();
 
-        $container->inflector(
+        $container->mutation(
             Bar::class,
             function (Bar $object) {
                 $object->setValue('foobar');
@@ -180,14 +180,14 @@ class ContainerTest extends TestCase
         static::assertSame($bar2->getValue(), 'bar');
     }
 
-    public function testInflectWithSharedObject()
+    public function testMutationWithSharedObject()
     {
         $container = new Container();
 
         $container->singleton(Bar::class);
 
         $counter = 0;
-        $container->inflector(
+        $container->mutation(
             Bar::class,
             function (Bar $object) use (&$counter) {
                 $counter++;

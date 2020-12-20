@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Chiron\Container\Inflector;
+namespace Chiron\Container\Mutation;
 
-class Inflector implements InflectorInterface
+class Mutation implements MutationInterface
 {
     /**
      * @var string

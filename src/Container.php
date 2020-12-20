@@ -7,8 +7,8 @@ namespace Chiron\Container;
 use Chiron\Container\Definition\Definition;
 use Chiron\Container\Exception\ContainerException;
 use Chiron\Container\Exception\EntityNotFoundException;
-use Chiron\Container\Inflector\Inflector;
-use Chiron\Container\Inflector\InflectorInterface;
+use Chiron\Container\Mutation\Mutation;
+use Chiron\Container\Mutation\MutationInterface;
 use Chiron\Injector\Injector;
 use LogicException;
 use Psr\Container\ContainerInterface;
@@ -63,8 +63,8 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
     // TODO : on devrait pas renommer ce tableau en "bindings" ?
     private $definitions = [];
 
-    /** @var \Chiron\Container\Inflector[] */
-    private $inflectors = [];
+    /** @var \Chiron\Container\Mutation[] */
+    private $mutations = [];
 
     /** @var array */
     private $entriesBeingResolved = [];
@@ -120,12 +120,12 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
      * @param string   $type     represent the class name
      * @param callable $callback
      *
-     * @return InflectorInterface
+     * @return MutationInterface
      */
     // TODO : renommer en mutation ou en interceptor ? avec une méthode qui s'execute soit respectivement "mutate()" ou "proceed()"
-    public function inflector(string $type, callable $callback): InflectorInterface
+    public function mutation(string $type, callable $callback): MutationInterface
     {
-        return $this->inflectors[] = new Inflector($type, $callback);
+        return $this->mutations[] = new Mutation($type, $callback);
     }
 
     /**
@@ -137,18 +137,18 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
      */
     // TODO : passer la version miniame de PHP à 7.3 car on est en train d'utiliser le typehint "object" qui est introduit seulement depuis PHP7.3
     // TODO : améliorer le code : https://github.com/auraphp/Aura.Di/blob/4.x/src/Resolver/Blueprint.php#L114
-    // TODO : déplacer cette méthode dans la classe Definition pour améliorer le resolve() et surtout faire une méthode public Container::getMutations() qui servira à récupérer $this->inflectors[]
+    // TODO : déplacer cette méthode dans la classe Definition pour améliorer le resolve() et surtout faire une méthode public Container::getMutations() qui servira à récupérer $this->mitations[]
     public function mutate($target)
     {
-        foreach ($this->inflectors as $inflector) {
-            $type = $inflector->getType();
+        foreach ($this->mutations as $mutation) {
+            $type = $mutation->getType();
 
             if (! $target instanceof $type) {
                 continue;
             }
 
             // TODO : il faudrait pas que l'on stocke le retour de cette appel dans $target, pour gérer le cas des objets immuables. Et il faudrait dans ce cas revérifier que le type de retour est bien toujours le même type d'object qu'on a recu en entrée.
-            call_user_func($inflector->getCallback(), $target);
+            call_user_func($mutation->getCallback(), $target);
         }
 
         // TODO : il faudrait pas faire une vérification que l'instance mutée est bien du même type d'objet que celui qu'on a eu en entrée de la fonction ? cela évitera que la mutation retourne un autre type d'objet, ce n'est pas le but de la mutation !!!!
