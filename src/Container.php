@@ -13,6 +13,7 @@ use Chiron\Injector\Injector;
 use LogicException;
 use Psr\Container\ContainerInterface;
 
+// TODO : wrapCallback =>   https://github.com/flarum/core/blob/master/src/Foundation/ContainerUtil.php
 
 // TODO : vérification si la classe passée en paramétre implémente bien l'interface attendue (cela peut servir pour la "mutation") mais aussi pour s'assurer qu'on bind correctement l'interface avec la classe qui est donnée dans le paramétre concréte.
 //https://github.com/ray-di/Ray.Di/blob/2.x/src/di/BindValidator.php#L57
@@ -74,8 +75,7 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
     /**
      * Container constructor.
      */
-    // TODO : lui passer en paramétre un bool '$asGlobal' initialisé par défaut à true, et qui permet d'appeller la méthode ->setAsGlobal() dans ce constructeur.
-    public function __construct()
+    public function __construct(bool $global = true)
     {
         $this->injector = new Injector($this);
 
@@ -85,6 +85,10 @@ final class Container implements ContainerInterface, BindingInterface, FactoryIn
         $this->singleton(BindingInterface::class, $this);
         $this->singleton(FactoryInterface::class, $this);
         $this->singleton(InvokerInterface::class, $this);
+
+        if ($global) {
+            $this->setAsGlobal();
+        }
     }
 
     /**
