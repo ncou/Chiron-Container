@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Chiron\Container;
 
 use Chiron\Container\Definition\Definition;
-use Chiron\Container\Inflector\InflectorInterface;
+use Chiron\Container\Mutation\MutationInterface;
 
 // TODO : nettoyer les méthodes non utilisées
 interface BindingInterface
@@ -112,12 +112,12 @@ interface BindingInterface
     /**
      * Allows for manipulation of specific types on resolution.
      *
-     * @param string   $type     reprsent the class name
+     * @param string   $type     represent the class name
      * @param callable $callback
      *
-     * @return InflectorInterface
+     * @return MutationInterface
      */
-    //public function inflector(string $type, callable $callback): InflectorInterface;
+    public function mutation(string $type, callable $callback): MutationInterface;
 
     /**
      * Register a service provider with the application.
