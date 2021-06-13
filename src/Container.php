@@ -13,6 +13,8 @@ use Chiron\Injector\Injector;
 use LogicException;
 use Psr\Container\ContainerInterface;
 
+// TODO : améliorer le setAsGlobal    https://github.com/illuminate/support/blob/7890f06161367e8337462e4a439671e387c8fd7e/Traits/CapsuleManagerTrait.php#L44   +     https://github.com/illuminate/database/blob/master/Capsule/Manager.php#L198
+
 // TODO : wrapCallback =>   https://github.com/flarum/core/blob/master/src/Foundation/ContainerUtil.php
 
 // TODO : vérification si la classe passée en paramétre implémente bien l'interface attendue (cela peut servir pour la "mutation") mais aussi pour s'assurer qu'on bind correctement l'interface avec la classe qui est donnée dans le paramétre concréte.

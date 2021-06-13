@@ -11,6 +11,7 @@ use UnexpectedValueException;
 /**
  * Defines the trait for a Container Aware Class.
  */
+// TODO : déplacer cette classe dans le package chiron/core ????
 trait ContainerAwareTrait
 {
     /**
@@ -57,6 +58,8 @@ trait ContainerAwareTrait
             return $this->container;
         }
 
+        // TODO : retourner plutot une ContainerException ???? ou ce n'est pas logique ?
+        // TODO : faire un throw new MissingContainerException('Container is missing, use setContainer() method to set it.');
         throw new UnexpectedValueException(sprintf('Container implementation not set in "%s".', static::class));
     }
 }
