@@ -15,13 +15,12 @@ use Chiron\Container\Reference;
 
 // TODO : il faudrait pas faire porter les mutations directement dans la classe Definition ? et elles seraient appliquées lors de l'appel de la méthode resolve. => attention pas forcément car tu peux ajouter une mutation sur une Interface, et lorsque tu vas résoudre une classe, tu n'auras pas les autres définitons de visible pour les interfaces implémentées par cette classe target. Ou alors rendre la méthode $container->mutate() public et la faire appeller depuis le Definition->resolve().
 
-// TODO : renommer la classe en "Binding" ou "Bind" ????
 final class Definition
 {
     /**
      * @var string
      */
-    private $id;
+    private $name;
 
     /**
      * @var mixed
@@ -31,7 +30,7 @@ final class Definition
     /**
      * @var mixed
      */
-    protected $resolved;
+    private $resolved;
 
     /**
      * @var bool
@@ -50,26 +49,25 @@ final class Definition
      * @param string $name
      * @param mixed  $concrete
      */
-    // TODO : utiliser $name au lieu de $id ????
-    public function __construct(string $id, $concrete = null)
+    public function __construct(string $name, $concrete = null)
     {
-        $concrete = $concrete ?? $id;
-        $this->id = $id;
+        $concrete = $concrete ?? $name;
+        $this->name = $name;
         $this->concrete = $concrete;
     }
 
     // TODO : attention c'est dangereux de laisser cette méthode accessible car l'utilisateur pourrait faire n'importe quoi, et il faudra surement faire un reset du $this->resolved en cas de changement de nom.
     // TODO : renommer en setName ????
-    public function setId(string $id): self
+    public function setName(string $name): self
     {
-        $this->id = $id;
+        $this->name = $name;
 
         return $this;
     }
 
-    public function getId(): string
+    public function getName(): string
     {
-        return $this->id;
+        return $this->name;
     }
 
     // TODO : remplacer le nommage "shared" par "singleton" ou "asSingleton()" ????
@@ -131,55 +129,8 @@ final class Definition
         return $this;
     }
 
-    // TODO ; utilité de laisser cette méthode en "public" ??? on devrait plutot la mettre en private !!!
-    public function isResolved(): bool
+    public function getArguments(): array
     {
-        return $this->resolved !== null;
-    }
-
-    // TODO : déplacer ici la logique du $new pour stocker dans cette classe le résultat de la résolution dans $this->resolved     https://github.com/thephpleague/container/blob/master/src/Definition/Definition.php#L193
-
-    // TODO : on devrait pas virer cette méthode car elle n'a rien à faire en public ??? et il faudrait plutot que cette méthode soit déplacée dans la classe Container cela éviterai de lui passer en attribut un $container !!! => Cela me semble plus logique que cette fonction "métier" soit plutot au niveau de la classe Container (ca fait pas de sens d'avoir une classe Definition en mode stand alone qu'on résoudrait par la suite en lui passant un container, ca ne serai pas logique surtout si on doit un jour faire porter les attributs "TAG" dans cette classe de définition !!!).
-    // return mixed
-    // TODO : renomer le parmatré $new en $forceNew
-    public function resolve(Container $container, bool $new)
-    {
-        // handle the singleton case.
-        // TODO : utiliser la méthode $tis->isResolved()
-        if ($this->isShared() && $this->resolved !== null && $new === false) {
-            return $this->resolved;
-        }
-
-        $concrete = $this->concrete;
-        $this->resolved = $concrete;
-
-        // TODO : permettre de passer dans le concrete un tableau avec un nom string de class ou une instance de classe et un second paramétre de type string qui est une méthode privée. Utiliser la reflection ->setAccessible(true) pour permettre d'invoker cette méthode. Cela est utilse lors de la création de "factory" de type ->bind('id', ['class', 'method']) et que la méthode est privée.  ====>  https://github.com/spiral/core/blob/master/src/Container.php#L499
-
-        // TODO : comment ca sez passe si on a mis dans la définition une instance d'une classe qui a une méthode __invoke ???? elle va surement être interprété comme un callable mais ce n'est pas ce qu'on souhaite !!!!
-        // TODO : il faudrait ajouter aussi une vérif soit "différent de object", sinon ajouter un if en début de proécédure dans le cas ou c'est un "scalaire ou objet" on n'essaye pas de résoudre la variable $concrete.
-        // TODO : il faudra surement résoudre les arguments, car par exemple on pourrait avoir comme argument une classe Reference pour les arguments du constructeur. ex : bind(Foobar::class)->addArgument(['request' => Reference::to('XXXXX')]) ou une classe Raw par exemple.
-        if (is_callable($concrete)) {
-            // TODO : attention il faudra gérer le cas ou les arguments sont de type "Reference" par exemple il faudra les résoudre avant de faire l'appel à la méthode invoke !!!
-            $this->resolved = $container->invoke($concrete, $this->arguments);
-        }
-
-        if (is_string($concrete) && class_exists($concrete)) {
-            // TODO : attention il faudra gérer le cas ou les arguments sont de type "Reference" par exemple il faudra les résoudre avant de faire l'appel à la méthode build !!!
-            $this->resolved = $container->build($concrete, $this->arguments);
-        }
-
-        // TODO : créer une interface ResolvableInterface pour la signature de la méthode "resolve()" ? ca permettrait de l'utiliser pour les classes Raw/Reference et d'externaliser cette méthode de la classe Definition.
-        if ($concrete instanceof Reference) {
-            // TODO : éventuellement pour éviter de porter la logique dans la méthode Reference::resolve, on pourrait faire le $container->get() directement ici, et ne laisser qu'une méthode dans cette classe "getValue" par exemple. Ca permettrait de préparer la prochaine classe "Raw" qui retournerai directement le résultat "$resolved = $concrete->getValue()"
-
-            // TODO : on devrait pas lever une exception si la clés de l'item à rechercher n'est pas bindée dans le container ? car ca limiterai les "références" à uniquement ce qui est déjà bound()===true, car c'est utilisé pour des alias, sans cette vérification on aurait une possiblité que l'utilisateur fasse une référence sur une classe non bindée et donc ca va créer la classe, ce qui n'est pas le but de cette classe !!!!
-
-            $this->resolved = $concrete->resolve($container, $new);
-        }
-
-        // Let's start the mutations !
-        $this->resolved = $container->mutate($this->resolved);
-
-        return $this->resolved;
+        return $this->arguments;
     }
 }

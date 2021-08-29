@@ -83,7 +83,7 @@ interface BindingInterface
      *
      * @return Definition
      */
-    public function extend(string $id): Definition;
+    //public function extend(string $id): Definition;
 
     public function bound(string $id): bool;
 

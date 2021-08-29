@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Chiron\Container\Exception;
 
 use Psr\Container\ContainerExceptionInterface;
-use RuntimeException;
+use Exception;
 
-class ContainerException extends RuntimeException implements ContainerExceptionInterface
+class BindingResolutionException extends Exception implements ContainerExceptionInterface
 {
 }
