@@ -257,7 +257,7 @@ final class Container implements ContainerInterface, BindingInterface
         // TODO : améliorer la gestion des exceptions circulaires en affichant dans l'exception l'ensemble des classes initialisée précédemment comme ca on retrouvera l'origine de l'appel (cad la 1ere classe qu'on essaye de résoudre via le get !!!!)
         // Check if we are already getting this entry -> circular dependency
         if (isset($this->entriesBeingResolved[$name])) {
-            // TODO : créer une DependencyException ???? ou une CurcularReferenceException ou une CircularDependencyException (https://github.com/laravel/framework/blob/277c2fbd0cebd2cb194807654d870f4040e288c0/src/Illuminate/Contracts/Container/CircularDependencyException.php)
+            // TODO : créer une DependencyException ???? ou une CircularReferenceException ou une CircularDependencyException (https://github.com/laravel/framework/blob/277c2fbd0cebd2cb194807654d870f4040e288c0/src/Illuminate/Contracts/Container/CircularDependencyException.php)
             // https://github.com/symfony/dependency-injection/blob/6b12d5bcd1e2f1cc9507cea6181787d642ec46b5/Container.php#L230
             // https://github.com/symfony/dependency-injection/blob/94d973cb742d8c5c5dcf9534220e6b73b09af1d4/Exception/ServiceCircularReferenceException.php
             /*
@@ -277,6 +277,7 @@ final class Container implements ContainerInterface, BindingInterface
             //$resolved = $definition->resolve($this, $new);
             $resolved = $this->resolveDefinition($this->definitions[$name], $new);
         } catch (EntryNotFoundException $e) {
+            // TODO : ce cas n'existera plus suite à la modification du composant Injector !!!!
             $message = sprintf('The service "%s" has a dependency on a non-existent service "%s".', $name, $e->getEntry());
             throw new BindingResolutionException($message, $e->getCode(), $e);
         } catch (InjectorException $e) {

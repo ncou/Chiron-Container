@@ -7,6 +7,9 @@ namespace Chiron\Container\Exception;
 use InvalidArgumentException;
 use Psr\Container\NotFoundExceptionInterface;
 
+// TODO : ajouter une gestion des alternatives !!!!
+//https://github.com/symfony/dependency-injection/blob/5.3/Exception/ServiceNotFoundException.php
+
 class EntryNotFoundException extends InvalidArgumentException implements NotFoundExceptionInterface
 {
     /** @var string */

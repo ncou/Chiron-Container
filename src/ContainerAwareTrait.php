@@ -11,7 +11,7 @@ use UnexpectedValueException;
 /**
  * Defines the trait for a Container Aware Class.
  */
-// TODO : déplacer cette classe dans le package chiron/core ????
+// TODO : déplacer cette classe+l'interface dans le package chiron/core ???? cela permettrait aussi d'utiliser une exception ImproperlyConfiguredException dans le cas ou le container n'est pas là !!!
 trait ContainerAwareTrait
 {
     /**

@@ -7,6 +7,9 @@ namespace Chiron\Container\Exception;
 use Psr\Container\ContainerExceptionInterface;
 use Exception;
 
+//https://github.com/symfony/dependency-injection/blob/5.3/Exception/ParameterCircularReferenceException.php
+//https://github.com/symfony/dependency-injection/blob/5.3/Exception/ServiceCircularReferenceException.php
+
 class CircularDependencyException extends Exception implements ContainerExceptionInterface
 {
     private $serviceId;
