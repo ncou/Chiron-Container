@@ -7,6 +7,7 @@ namespace Chiron\Tests\Container;
 use Chiron\Container\Container;
 use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
+use Chiron\Container\Exception\BindingResolutionException;
 
 class AutoResolveTest extends TestCase
 {
@@ -34,27 +35,21 @@ class AutoResolveTest extends TestCase
         static::assertInstanceOf(AutoResolveOptionalDependency::class, $instance);
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     *
-     * @expectedExceptionMessage Invalid value for parameter $unknown
-     */
     public function testResolveExceptionForDependency()
     {
-        $container = new Container();
+        $this->expectExceptionMessage('The service "Chiron\Tests\Container\AutoResolveTestDependency" cannot be resolved: missing required value for parameter "$unknown"');
+        $this->expectException(BindingResolutionException::class);
 
+        $container = new Container();
         $container->get(AutoResolveTestDependency::class);
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     *
-     * @expectedExceptionMessage Invalid value for parameter $unknown
-     */
     public function testResolveExceptionForClass()
     {
-        $container = new Container();
+        $this->expectExceptionMessage('The service "Chiron\Tests\Container\AutoResolveTestDependency" cannot be resolved: missing required value for parameter "$unknown"');
+        $this->expectException(BindingResolutionException::class);
 
+        $container = new Container();
         $container->get(AutoResolveTestClass::class);
     }
 }

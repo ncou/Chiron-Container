@@ -20,49 +20,41 @@ class NotInstantiableTest extends TestCase
         static::assertTrue($container->has(ContainerTestPrivateConstructor::class)); // private constructor
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     *
-     * @expectedExceptionMessage Entry 'Chiron\Tests\Container\ContainerTestInterface' cannot be resolved
-     */
     public function testBuildInterface()
     {
+        $this->expectExceptionMessage('Entry \'Chiron\Tests\Container\ContainerTestInterface\' cannot be resolved');
+        $this->expectException(InvalidArgumentException::class);
+
         $container = new Container();
 
         static::assertFalse($container->build(ContainerTestInterface::class)); // interface
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     *
-     * @expectedExceptionMessage Entry "Chiron\Tests\Container\ContainerTestAbstract" cannot be resolved: the class is not instantiable
-     */
     public function testBuildAbstractClass()
     {
+        $this->expectExceptionMessage('Entry "Chiron\Tests\Container\ContainerTestAbstract" cannot be resolved: the class is not instantiable');
+        $this->expectException(InvalidArgumentException::class);
+
         $container = new Container();
 
         static::assertFalse($container->build(ContainerTestAbstract::class)); // abstract class
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     *
-     * @expectedExceptionMessage Entry 'Chiron\Tests\Container\ContainerTestTrait' cannot be resolved
-     */
     public function testBuildTrait()
     {
+        $this->expectExceptionMessage('Entry \'Chiron\Tests\Container\ContainerTestTrait\' cannot be resolved');
+        $this->expectException(InvalidArgumentException::class);
+
         $container = new Container();
 
         static::assertFalse($container->build(ContainerTestTrait::class)); // trait
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     *
-     * @expectedExceptionMessage Entry "Chiron\Tests\Container\ContainerTestPrivateConstructor" cannot be resolved: the class is not instantiable
-     */
     public function testBuildPrivateConstructorClass()
     {
+        $this->expectExceptionMessage('Entry "Chiron\Tests\Container\ContainerTestPrivateConstructor" cannot be resolved: the class is not instantiable');
+        $this->expectException(InvalidArgumentException::class);
+
         $container = new Container();
 
         static::assertFalse($container->build(ContainerTestPrivateConstructor::class)); // private constructor

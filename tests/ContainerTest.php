@@ -8,6 +8,7 @@ use Chiron\Container\Container;
 use Closure;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
+use Chiron\Container\Exception\EntryNotFoundException;
 
 class ContainerTest extends TestCase
 {
@@ -204,24 +205,20 @@ class ContainerTest extends TestCase
         static::assertSame($counter, 2);
     }
 
-    /**
-     * @expectedException Chiron\Container\Exception\EntityNotFoundException
-     *
-     * @expectedExceptionMessage Service "unknown" wasn't found in the dependency injection container
-     */
     public function testGetFail()
     {
+        $this->expectExceptionMessage('Service "unknown" wasn\'t found in the dependency injection container');
+        $this->expectException(EntryNotFoundException::class);
+
         $container = new Container();
         $container->get('unknown');
     }
 
-    /**
-     * @expectedException Chiron\Container\Exception\EntityNotFoundException
-     *
-     * @expectedExceptionMessage Service "unknown" wasn't found in the dependency injection container
-     */
     public function testGetAliasFail()
     {
+        $this->expectExceptionMessage('Service "unknown" wasn\'t found in the dependency injection container');
+        $this->expectException(EntryNotFoundException::class);
+
         $container = new Container();
         $container->alias('fail', 'unknown');
 
