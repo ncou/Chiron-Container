@@ -27,41 +27,57 @@ class CircularDependencyTest extends TestCase
 
     public function testGetByCreateCircularDependencyFromAlias2()
     {
-        $this->expectExceptionMessage('Circular dependency detected for service "AliasA", path: "AliasA -> LinkA -> AliasA".');
-        $this->expectException(CircularDependencyException::class);
-
         $container = new Container();
-
         $container->alias('AliasA', 'LinkA');
         $container->alias('LinkA', 'AliasA');
 
-        $object = $container->get('AliasA');
+        try {
+            $container->get('AliasA');
+        } catch (CircularDependencyException $exception) {
+            $this->assertInstanceOf(CircularDependencyException::class, $exception);
+            $this->assertSame('Circular dependency detected for service "AliasA", path: "AliasA -> LinkA -> AliasA".', $exception->getMessage());
+            $this->assertSame('AliasA', $exception->getServiceId());
+            $this->assertSame(['AliasA', 'LinkA', 'AliasA'], $exception->getPath());
+        }
     }
 
     public function testGetByCreateCircularDependency()
     {
-        $this->expectExceptionMessage('Circular dependency detected for service "Chiron\Tests\Container\Circular\Class1CircularDependency", path: "Chiron\Tests\Container\Circular\Class1CircularDependency -> Chiron\Tests\Container\Circular\Class2CircularDependency -> Chiron\Tests\Container\Circular\Class1CircularDependency".');
-        $this->expectException(CircularDependencyException::class);
-
         $container = new Container();
 
-        $object = $container->get(Class1CircularDependency::class);
-        static::assertInstanceOf(Class1CircularDependency::class, $object);
+        try {
+            $container->get(Class1CircularDependency::class);
+        } catch (CircularDependencyException $exception) {
+            $this->assertInstanceOf(CircularDependencyException::class, $exception);
+            $this->assertSame('Circular dependency detected for service "Chiron\Tests\Container\Circular\Class1CircularDependency", path: "Chiron\Tests\Container\Circular\Class1CircularDependency -> Chiron\Tests\Container\Circular\Class2CircularDependency -> Chiron\Tests\Container\Circular\Class1CircularDependency".', $exception->getMessage());
+            $this->assertSame('Chiron\Tests\Container\Circular\Class1CircularDependency', $exception->getServiceId());
+            $this->assertSame([
+                'Chiron\Tests\Container\Circular\Class1CircularDependency',
+                'Chiron\Tests\Container\Circular\Class2CircularDependency',
+                'Chiron\Tests\Container\Circular\Class1CircularDependency'
+            ], $exception->getPath());
+        }
     }
 
     public function testGetByCreateCircularDependencyFromContainer()
     {
-        $this->expectExceptionMessage('Circular dependency detected for service "Chiron\Tests\Container\Circular\Class1CircularDependency", path: "Chiron\Tests\Container\Circular\Class1CircularDependency -> Chiron\Tests\Container\Circular\Class2CircularDependency -> Chiron\Tests\Container\Circular\Class1CircularDependency".');
-        $this->expectException(CircularDependencyException::class);
-
         $container = new Container();
 
         $container->bind(Class1CircularDependency::class);
         $container->bind(Class2CircularDependency::class);
 
-        $object = $container->get(Class1CircularDependency::class);
-
-        static::assertInstanceOf(Class1CircularDependency::class, $object);
+        try {
+            $container->get(Class1CircularDependency::class);
+        } catch (CircularDependencyException $exception) {
+            $this->assertInstanceOf(CircularDependencyException::class, $exception);
+            $this->assertSame('Circular dependency detected for service "Chiron\Tests\Container\Circular\Class1CircularDependency", path: "Chiron\Tests\Container\Circular\Class1CircularDependency -> Chiron\Tests\Container\Circular\Class2CircularDependency -> Chiron\Tests\Container\Circular\Class1CircularDependency".', $exception->getMessage());
+            $this->assertSame('Chiron\Tests\Container\Circular\Class1CircularDependency', $exception->getServiceId());
+            $this->assertSame([
+                'Chiron\Tests\Container\Circular\Class1CircularDependency',
+                'Chiron\Tests\Container\Circular\Class2CircularDependency',
+                'Chiron\Tests\Container\Circular\Class1CircularDependency'
+            ], $exception->getPath());
+        }
     }
 }
 
