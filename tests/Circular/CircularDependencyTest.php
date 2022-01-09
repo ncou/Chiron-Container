@@ -12,14 +12,17 @@ class CircularDependencyTest extends TestCase
 {
     public function testGetByCreateCircularDependencyFromAlias()
     {
-        $this->expectExceptionMessage('Circular dependency detected for service "AliasA", path: "AliasA -> AliasA".');
-        $this->expectException(CircularDependencyException::class);
-
         $container = new Container();
-
         $container->alias('AliasA', 'AliasA');
 
-        $object = $container->get('AliasA');
+        try {
+            $container->get('AliasA');
+        } catch (CircularDependencyException $exception) {
+            $this->assertInstanceOf(CircularDependencyException::class, $exception);
+            $this->assertSame('Circular dependency detected for service "AliasA", path: "AliasA -> AliasA".', $exception->getMessage());
+            $this->assertSame('AliasA', $exception->getServiceId());
+            $this->assertSame(['AliasA', 'AliasA'], $exception->getPath());
+        }
     }
 
     public function testGetByCreateCircularDependencyFromAlias2()
