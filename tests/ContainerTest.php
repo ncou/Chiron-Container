@@ -9,6 +9,7 @@ use Closure;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Chiron\Container\Exception\EntryNotFoundException;
+use Chiron\Container\Exception\BindingResolutionException;
 
 class ContainerTest extends TestCase
 {
@@ -207,7 +208,7 @@ class ContainerTest extends TestCase
 
     public function testGetFail()
     {
-        $this->expectExceptionMessage('Service "unknown" wasn\'t found in the dependency injection container');
+        $this->expectExceptionMessage('Undefined class or binding for "unknown".');
         $this->expectException(EntryNotFoundException::class);
 
         $container = new Container();
@@ -216,8 +217,8 @@ class ContainerTest extends TestCase
 
     public function testGetAliasFail()
     {
-        $this->expectExceptionMessage('Service "unknown" wasn\'t found in the dependency injection container');
-        $this->expectException(EntryNotFoundException::class);
+        $this->expectExceptionMessage('The service "fail" has a dependency on a non-existent service "unknown".');
+        $this->expectException(BindingResolutionException::class);
 
         $container = new Container();
         $container->alias('fail', 'unknown');
