@@ -13,7 +13,7 @@ use Psr\Container\NotFoundExceptionInterface;
 class EntryNotFoundException extends InvalidArgumentException implements NotFoundExceptionInterface
 {
     /** @var string */
-    protected $entry;
+    protected string $entry;
 
     /**
      * @param string $entry

@@ -9,7 +9,7 @@ class Mutation implements MutationInterface
     /**
      * @var string
      */
-    protected $type;
+    protected string $type;
 
     /**
      * @var callable

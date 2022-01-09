@@ -80,19 +80,19 @@ final class Container implements ContainerInterface, BindingInterface
 
     /** @var \Chiron\Container\Definition\Definition[] */
     // TODO : on devrait pas renommer ce tableau en "bindings" ?
-    private $definitions = [];
+    private array $definitions = [];
 
     /** @var \Chiron\Container\Mutation[] */
-    private $mutations = [];
+    private array $mutations = [];
 
     /** @var array<bool> */
-    private $entriesBeingResolved = []; // TODO : utiliser plutot un SplObjectStorage et stocker l'objet Definition::class pour utiliser les méthodes contains/attach/detach et si besoin iterator_to_array    https://github.com/nette/di/blob/f3608c4d8684c880c2af0cf7b4d2b7143bc459b0/src/DI/Resolver.php#L46
+    private array $entriesBeingResolved = []; // TODO : utiliser plutot un SplObjectStorage et stocker l'objet Definition::class pour utiliser les méthodes contains/attach/detach et si besoin iterator_to_array    https://github.com/nette/di/blob/f3608c4d8684c880c2af0cf7b4d2b7143bc459b0/src/DI/Resolver.php#L46
 
     /** @var array<mixed> */
-    private $entriesResolved = [];
+    private array $entriesResolved = [];
 
     /** @var bool */
-    private $defaultToShared = false;
+    private bool $defaultToShared = false;
 
     /**
      * Container constructor.
@@ -172,6 +172,7 @@ final class Container implements ContainerInterface, BindingInterface
     // TODO : ajouter une vérif (et lever une erreur) sur le binding d'un service qui est déjà initialisé : https://github.com/symfony/symfony/blob/4dd6e2f0b2daefc2bddd08aa056370afb1c1cb1d/src/Symfony/Component/DependencyInjection/Container.php#L172           +                   https://github.com/symfony/symfony/blob/4dd6e2f0b2daefc2bddd08aa056370afb1c1cb1d/src/Symfony/Component/DependencyInjection/Container.php#L293
     // TODO : lever une erreur si on essaye de rebinder un service qui est de type "Privé" ou éventuellement utiliser plutot un attribut "freezed" dans la classe Definition pour indiquer qu'on ne peut pas redéfinir(cad rebinder) ce service !!!!
     // TODO : vérifier le type de concréte qu'on veut binder. exemple : https://github.com/yiisoft/di/blob/master/src/Container.php#L168
+    // TODO : vérifier si il n'y a pas déjà un binding avec ce nom, plus le case sensitive !!!! https://github.com/nette/di/blob/aa7ce9cc8693da45c60cf9b8120e94e43e7c5d34/src/DI/ContainerBuilder.php#L63
     public function bind(string $name, $concrete = null, ?bool $shared = null): Definition
     {
         // TODO : lever une exception si le $concrete n'est pas du bon type : https://github.com/illuminate/container/blob/master/Container.php#L263
@@ -266,6 +267,7 @@ final class Container implements ContainerInterface, BindingInterface
                 $name
             ));*/
 
+            // TODO : améliorer le code versus le array_merge !!!!   https://github.com/nette/di/blob/16f7d617d8ec5a08b0c4700f4cfc488fde4ed457/src/DI/Resolver.php#L58
             throw new CircularDependencyException($name, array_merge(array_keys($this->entriesBeingResolved), [$name]));
 
         }
@@ -277,7 +279,7 @@ final class Container implements ContainerInterface, BindingInterface
             //$resolved = $definition->resolve($this, $new);
             $resolved = $this->resolveDefinition($this->definitions[$name], $new);
         } catch (EntryNotFoundException $e) {
-            // TODO : ce cas n'existera plus suite à la modification du composant Injector !!!!
+            // TODO : ce cas n'existera plus suite à la modification du composant Injector !!!! Donc ce catch est à virer !!!!
             $message = sprintf('The service "%s" has a dependency on a non-existent service "%s".', $name, $e->getEntry());
             throw new BindingResolutionException($message, $e->getCode(), $e);
         } catch (InjectorException $e) {

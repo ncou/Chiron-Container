@@ -48,7 +48,7 @@ interface BindingInterface
      *
      * @return Definition
      */
-    public function singleton(string $id, $concrete = null): Definition;
+    public function singleton(string $id, mixed $concrete = null): Definition;
 
     /**
      * Add multiple definitions at once.
@@ -66,7 +66,7 @@ interface BindingInterface
      *
      * @return Definition
      */
-    public function bind(string $id, $concrete = null, ?bool $shared = null): Definition;
+    public function bind(string $id, mixed $concrete = null, ?bool $shared = null): Definition;
 
     /**
      * @param string $alias
