@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Chiron\Tests\Container\Circular;
 
 use Chiron\Container\Container;
-use PHPUnit\Framework\TestCase;
 use Chiron\Container\Exception\CircularDependencyException;
+use PHPUnit\Framework\TestCase;
 
 class CircularDependencyTest extends TestCase
 {
@@ -54,7 +54,7 @@ class CircularDependencyTest extends TestCase
             $this->assertSame([
                 'Chiron\Tests\Container\Circular\Class1CircularDependency',
                 'Chiron\Tests\Container\Circular\Class2CircularDependency',
-                'Chiron\Tests\Container\Circular\Class1CircularDependency'
+                'Chiron\Tests\Container\Circular\Class1CircularDependency',
             ], $exception->getPath());
         }
     }
@@ -75,7 +75,7 @@ class CircularDependencyTest extends TestCase
             $this->assertSame([
                 'Chiron\Tests\Container\Circular\Class1CircularDependency',
                 'Chiron\Tests\Container\Circular\Class2CircularDependency',
-                'Chiron\Tests\Container\Circular\Class1CircularDependency'
+                'Chiron\Tests\Container\Circular\Class1CircularDependency',
             ], $exception->getPath());
         }
     }

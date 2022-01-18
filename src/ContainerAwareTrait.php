@@ -7,6 +7,7 @@ namespace Chiron\Container;
 use UnexpectedValueException;
 
 //https://github.com/thephpleague/container/blob/master/src/ContainerAwareTrait.php
+//https://github.com/thephpleague/container/blob/4.x/src/ContainerAwareTrait.php
 
 /**
  * Defines the trait for a Container Aware Class.
@@ -14,11 +15,7 @@ use UnexpectedValueException;
 // TODO : déplacer cette classe+l'interface dans le package chiron/core ???? cela permettrait aussi d'utiliser une exception ImproperlyConfiguredException dans le cas ou le container n'est pas là !!!
 trait ContainerAwareTrait
 {
-    /**
-     * DI Container.
-     *
-     * @var Container
-     */
+    /** @var ?Container */
     protected $container;
 
     /**
@@ -31,6 +28,8 @@ trait ContainerAwareTrait
     public function setContainer(Container $container): ContainerAwareInterface
     {
         $this->container = $container;
+        // TODO : lever une exception si on n'a pas implémenté l'interface ContainerAwareInterface car le return $this sera en conflit avec le return typehint !!!
+        //https://github.com/thephpleague/container/blob/4.x/src/ContainerAwareTrait.php
 
         return $this;
     }

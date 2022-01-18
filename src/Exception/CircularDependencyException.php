@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Chiron\Container\Exception;
 
-use Psr\Container\ContainerExceptionInterface;
 use Exception;
+use Psr\Container\ContainerExceptionInterface;
 
 //https://github.com/symfony/dependency-injection/blob/5.3/Exception/ParameterCircularReferenceException.php
 //https://github.com/symfony/dependency-injection/blob/5.3/Exception/ServiceCircularReferenceException.php
@@ -15,7 +15,7 @@ class CircularDependencyException extends Exception implements ContainerExceptio
     private string $serviceId;
     private array $path;
 
-    public function __construct(string $serviceId, array $path, \Throwable $previous = null)
+    public function __construct(string $serviceId, array $path, ?\Throwable $previous = null)
     {
         parent::__construct(sprintf('Circular dependency detected for service "%s", path: "%s".', $serviceId, implode(' -> ', $path)), 0, $previous);
 

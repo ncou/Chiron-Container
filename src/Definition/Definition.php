@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 namespace Chiron\Container\Definition;
 
-use Chiron\Container\Container;
-use Chiron\Container\Reference;
-
 //https://github.com/thephpleague/container/blob/master/src/Definition/Definition.php
 //https://github.com/symfony/dependency-injection/blob/master/Definition.php
 //https://github.com/slince/di/blob/master/Definition.php

@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Chiron\Tests\Container;
 
 use Chiron\Container\Container;
-use InvalidArgumentException;
-use PHPUnit\Framework\TestCase;
 use Chiron\Container\Exception\BindingResolutionException;
+use PHPUnit\Framework\TestCase;
 
 class AutoResolveTest extends TestCase
 {

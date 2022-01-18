@@ -5,20 +5,16 @@ declare(strict_types=1);
 namespace Chiron\Container;
 
 use Chiron\Container\Definition\Definition;
-use Chiron\Container\Exception\ContainerException;
+use Chiron\Container\Exception\BindingResolutionException;
 use Chiron\Container\Exception\CircularDependencyException;
 use Chiron\Container\Exception\EntryNotFoundException;
-use Chiron\Container\Exception\BindingResolutionException;
 use Chiron\Container\Mutation\Mutation;
 use Chiron\Container\Mutation\MutationInterface;
+use Chiron\Injector\Exception\InjectorException;
+use Chiron\Injector\FactoryInterface;
 use Chiron\Injector\Injector;
 use Chiron\Injector\InvokerInterface;
-use Chiron\Injector\FactoryInterface;
-use LogicException;
 use Psr\Container\ContainerInterface;
-use Psr\EventDispatcher\EventDispatcherInterface;
-use Throwable;
-use Chiron\Injector\Exception\InjectorException;
 
 //https://github.com/illuminate/container/blob/0953cf5ed6985839b3061548a15deabe9ce2e72d/Container.php
 
@@ -76,7 +72,7 @@ final class Container implements ContainerInterface, BindingInterface
     public static $instance;
 
     /** @var Injector */
-    private $injector;
+    private Injector $injector;
 
     /** @var \Chiron\Container\Definition\Definition[] */
     // TODO : on devrait pas renommer ce tableau en "bindings" ?
@@ -100,7 +96,7 @@ final class Container implements ContainerInterface, BindingInterface
     public function __construct(bool $global = true)
     {
         // TODO : ajouter un PHPunit pour vérifier si ces 4 classes sont bien bindées à la construction de la classe !!!
-        $this->singleton(Container::class, $this);
+        $this->singleton(self::class, $this);
         $this->singleton(ContainerInterface::class, $this); // TODO : utiliser plutot ->alias() ????
         $this->singleton(BindingInterface::class, $this); // TODO : utiliser plutot ->alias() ????
 
@@ -269,7 +265,6 @@ final class Container implements ContainerInterface, BindingInterface
 
             // TODO : améliorer le code versus le array_merge !!!!   https://github.com/nette/di/blob/16f7d617d8ec5a08b0c4700f4cfc488fde4ed457/src/DI/Resolver.php#L58
             throw new CircularDependencyException($name, array_merge(array_keys($this->entriesBeingResolved), [$name]));
-
         }
         $this->entriesBeingResolved[$name] = true;
 
@@ -281,9 +276,11 @@ final class Container implements ContainerInterface, BindingInterface
         } catch (EntryNotFoundException $e) {
             // TODO : ce cas n'existera plus suite à la modification du composant Injector !!!! Donc ce catch est à virer !!!!
             $message = sprintf('The service "%s" has a dependency on a non-existent service "%s".', $name, $e->getEntry());
+
             throw new BindingResolutionException($message, $e->getCode(), $e);
         } catch (InjectorException $e) {
-            $message = sprintf('The service "%s" cannot be resolved: %s.', $name, rtrim(lcfirst($e->getMessage()),'.')); // TODO : virer le trim sur le point si on s'assure que toutes les exception de type InjectorException on bien un message qui se termine par un point !!!
+            $message = sprintf('The service "%s" cannot be resolved: %s.', $name, rtrim(lcfirst($e->getMessage()), '.')); // TODO : virer le trim sur le point si on s'assure que toutes les exception de type InjectorException on bien un message qui se termine par un point !!!
+
             throw new BindingResolutionException($message, $e->getCode(), $e);
         } finally {
             unset($this->entriesBeingResolved[$name]);
@@ -395,8 +392,6 @@ final class Container implements ContainerInterface, BindingInterface
         unset($this->definitions[$name]);
     }
 
-
-
     // TODO : méthode à virer !!!!
     /*
     private function convertAssign(array $arguments): array
@@ -499,7 +494,6 @@ final class Container implements ContainerInterface, BindingInterface
         // TODO : forcer le type de retour dans la signature de la méthode, et vérifier ce qui se passe si on ne passe rien si le "null" est retourné par cette méthode.
         return static::$instance = $container;
     }*/
-
 
     /**
      * Whether the container should default to defining shared definitions.

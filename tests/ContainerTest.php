@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Chiron\Tests\Container;
 
 use Chiron\Container\Container;
+use Chiron\Container\Exception\BindingResolutionException;
+use Chiron\Container\Exception\EntryNotFoundException;
 use Closure;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
-use Chiron\Container\Exception\EntryNotFoundException;
-use Chiron\Container\Exception\BindingResolutionException;
 
 class ContainerTest extends TestCase
 {
