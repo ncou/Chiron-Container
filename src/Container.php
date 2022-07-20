@@ -125,6 +125,7 @@ final class Container implements ContainerInterface, BindingInterface
      */
     // TODO : renommer en mutation ou en interceptor ? avec une méthode qui s'execute soit respectivement "mutate()" ou "proceed()"
     // TODO : vérifier l'utilité d'avoir une classe MutationInterface ??? on pourrait directement utiliser la classe Mutation::class
+    // TODO : il faudrait s'assurer que le callback retourne bien un "object" !!!
     public function mutation(string $type, callable $callback): MutationInterface
     {
         return $this->mutations[] = new Mutation($type, $callback);
@@ -263,7 +264,9 @@ final class Container implements ContainerInterface, BindingInterface
                 $name
             ));*/
 
+
             // TODO : améliorer le code versus le array_merge !!!!   https://github.com/nette/di/blob/16f7d617d8ec5a08b0c4700f4cfc488fde4ed457/src/DI/Resolver.php#L58
+            // https://github.com/symfony/symfony/blob/6.1/src/Symfony/Contracts/Service/ServiceLocatorTrait.php#L58
             throw new CircularDependencyException($name, array_merge(array_keys($this->entriesBeingResolved), [$name]));
         }
         $this->entriesBeingResolved[$name] = true;
@@ -275,7 +278,8 @@ final class Container implements ContainerInterface, BindingInterface
             $resolved = $this->resolveDefinition($this->definitions[$name], $new);
         } catch (EntryNotFoundException $e) {
             // TODO : ce cas n'existera plus suite à la modification du composant Injector !!!! Donc ce catch est à virer !!!!
-            $message = sprintf('The service "%s" has a dependency on a non-existent service "%s".', $name, $e->getEntry());
+            // https://github.com/symfony/symfony/blob/6.1/src/Symfony/Contracts/Service/ServiceLocatorTrait.php#L110
+            $message = sprintf('The service "%s" has a dependency on a non-existent service "%s".', $name, $e->getEntry()); // TODO : renommer le message en 'The service xx is aliased on a non existent sevice xx.'
 
             throw new BindingResolutionException($message, $e->getCode(), $e);
         } catch (InjectorException $e) {
